@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionOne.Provisioning", "VersionOne.Provisioning\VersionOne.Provisioning.csproj", "{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionOne.Provisioning.LDAP", "VersionOne.Provisioning.LDAP\VersionOne.Provisioning.LDAP.csproj", "{D347843E-F5DE-42BB-9D5D-86237495ECBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionOne.Provisioning.LDAP.Tests", "VersionOne.Provisioning.LDAP.Tests\VersionOne.Provisioning.LDAP.Tests.csproj", "{8A308519-2BFC-4606-A878-3E8B72D97A60}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionOne.Provisioning.Tests", "VersionOne.Provisioning.Tests\VersionOne.Provisioning.Tests.csproj", "{01DB3028-5AA9-49CC-8FAF-889C01A755C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionOne.Provisioning.Console", "VersionOne.Provisioning.Console\VersionOne.Provisioning.Console.csproj", "{B9DD1BE8-111D-4E13-AF19-B4655B8290D0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProvisioningWindowsDebugHarness", "ProvisioningWindowsTestHarness\ProvisioningWindowsDebugHarness.csproj", "{BEE32A90-8D0F-467E-A912-21F9CD2FEE94}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D347843E-F5DE-42BB-9D5D-86237495ECBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D347843E-F5DE-42BB-9D5D-86237495ECBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D347843E-F5DE-42BB-9D5D-86237495ECBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D347843E-F5DE-42BB-9D5D-86237495ECBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A308519-2BFC-4606-A878-3E8B72D97A60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A308519-2BFC-4606-A878-3E8B72D97A60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A308519-2BFC-4606-A878-3E8B72D97A60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A308519-2BFC-4606-A878-3E8B72D97A60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01DB3028-5AA9-49CC-8FAF-889C01A755C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01DB3028-5AA9-49CC-8FAF-889C01A755C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01DB3028-5AA9-49CC-8FAF-889C01A755C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01DB3028-5AA9-49CC-8FAF-889C01A755C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9DD1BE8-111D-4E13-AF19-B4655B8290D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9DD1BE8-111D-4E13-AF19-B4655B8290D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9DD1BE8-111D-4E13-AF19-B4655B8290D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9DD1BE8-111D-4E13-AF19-B4655B8290D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BEE32A90-8D0F-467E-A912-21F9CD2FEE94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BEE32A90-8D0F-467E-A912-21F9CD2FEE94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BEE32A90-8D0F-467E-A912-21F9CD2FEE94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BEE32A90-8D0F-467E-A912-21F9CD2FEE94}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
