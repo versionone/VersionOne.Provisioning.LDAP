@@ -156,9 +156,12 @@ namespace VersionOne.Provisioning
             string username = member.GetAttribute(usernameAttribute).Value.ToString();
 
             //Verify result
-            
+            // DO THAT HERE
 
-            // Log result to a file(?)
+            /* Log result to a file
+             * REFACTOR THIS TO USE A CLASS-LEVEL STRINGBUILDER AND THEN LOG THE STRING AT ONCE,
+             * INSTEAD OF HAVING FILE IO WITH EVERY USER PROCESSED
+            */
             string msgString = "Username " + username + " has been deactivated in the VersionOne system.";
             LogActionResult(msgString);
         }
@@ -187,9 +190,12 @@ namespace VersionOne.Provisioning
             services.Save(newMember);
             
             //Verify result
-            
+            // DO THAT HERE
 
-            // Log result to a file(?)
+            /* Log result to a file
+             * REFACTOR THIS TO USE A CLASS-LEVEL STRINGBUILDER AND THEN LOG THE STRING AT ONCE,
+             * INSTEAD OF HAVING FILE IO WITH EVERY USER PROCESSED
+            */
             string msgString = "Username " + username + " has been created in the VersionOne system.";
             LogActionResult(msgString);
         }
@@ -211,6 +217,7 @@ namespace VersionOne.Provisioning
 
         private void LogActionResult(string message)
         {
+            /* REFACTOR THIS INTO TO A "MESSAGING AND LOGGING" CLASS */
             string textToWrite = message;
             string path = @"C:\testlogs\samplelog.txt"; //NEEDS TO BE DYNAMIC -- HARD-CODED FOR TESTING ONLY.
             FileStream fstream = new FileStream(path, FileMode.Append, FileAccess.Write);
