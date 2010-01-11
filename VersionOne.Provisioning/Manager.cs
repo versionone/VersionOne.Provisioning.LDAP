@@ -11,6 +11,7 @@ namespace VersionOne.Provisioning
     {
         private IServices services;
         private IMetaModel model;
+        private StringBuilder logstring;
 
         public Manager(IServices services, IMetaModel model)
         {
@@ -118,15 +119,18 @@ namespace VersionOne.Provisioning
              * action in V1. 
             */
 
+            logstring = new StringBuilder();
+
             foreach (User user in actionList)
             {
                 if (user.Deactivate == true)
                 {
+                    string username = user.Username;
                     //Use a query filtered on username to get the Oid of the member...
-                    Oid memberOid = GetMemberOidByUsername(user.Username);
+                    Oid memberOid = GetMemberOidByUsername(username);
 
                     //Deactivate the user in V1. 
-                    DeactivateVersionOneMember(memberOid);
+                    DeactivateVersionOneMember(memberOid, username);
 
                 }
                 else if (user.Create == true)
@@ -135,35 +139,36 @@ namespace VersionOne.Provisioning
                 }
 
             }
+            
+            //Flush the cached messaging to the log file
+            LogActionResult(logstring);
 
         }
 
         
-        private void DeactivateVersionOneMember(Oid memberOid)
+        private void DeactivateVersionOneMember(Oid memberOid, string uname)
         {
-            IOperation inactivateMember = model.GetOperation(V1Constants.INACTIVATE);
-            Oid inactivatedOid = services.ExecuteOperation(inactivateMember, memberOid);
+            string resultString = "";
 
-            //Verify that the user has been deactivated
-            Query query = new Query(memberOid);
-            IAttributeDefinition isInactiveAttribute = model.GetAttributeDefinition(V1Constants.ISINACTIVE);
-            IAttributeDefinition usernameAttribute = model.GetAttributeDefinition(V1Constants.USERNAME);
-            query.Selection.Add(isInactiveAttribute);
-            query.Selection.Add(usernameAttribute);
-            QueryResult result = services.Retrieve(query);
-            Asset member = result.Assets[0];
+            try
+            {
+                IOperation inactivateMember = model.GetOperation(V1Constants.INACTIVATE);
+                Oid inactivatedOid = services.ExecuteOperation(inactivateMember, memberOid);
+    
+                resultString = "Member with username '" + uname + "' has been deactivated in the VersionOne system.";
+            }
 
-            string username = member.GetAttribute(usernameAttribute).Value.ToString();
+            catch (Exception)
+            {
+                resultString = "Attempt to deactivate Member with username '" + uname + "' in the VersionOne system has FAILED.";
+            }
 
-            //Verify result
-            // DO THAT HERE
-
-            /* Log result to a file
-             * REFACTOR THIS TO USE A CLASS-LEVEL STRINGBUILDER AND THEN LOG THE STRING AT ONCE,
-             * INSTEAD OF HAVING FILE IO WITH EVERY USER PROCESSED
-            */
-            string msgString = "Username " + username + " has been deactivated in the VersionOne system.";
-            LogActionResult(msgString);
+            finally
+            {
+                /* Cache the result for logging */
+                logstring.AppendLine(DateTime.Now + ": " + resultString);    
+            }
+            
         }
 
         private void CreateNewVersionOneMember(User user)
@@ -172,32 +177,48 @@ namespace VersionOne.Provisioning
             //Role will default to Team Member.
 
             string username = user.Username;
+            string resultString = "";
 
-            IAssetType memberType = model.GetAssetType(V1Constants.MEMBER);
-            Asset newMember = services.New(memberType, null);
-            IAttributeDefinition usernameAttribute = memberType.GetAttributeDefinition("Username");
-            IAttributeDefinition nameAttribute = memberType.GetAttributeDefinition("Name");
-            IAttributeDefinition nicknameAttribute = memberType.GetAttributeDefinition("Nickname");
-            IAttributeDefinition emailAttribute = memberType.GetAttributeDefinition("Email");
-            IAttributeDefinition defaultRoleAttribute = memberType.GetAttributeDefinition("DefaultRole");
+            try
+            {
+                IAssetType memberType = model.GetAssetType(V1Constants.MEMBER);
+                Asset newMember = services.New(memberType, null);
+                IAttributeDefinition usernameAttribute = memberType.GetAttributeDefinition("Username");
+                IAttributeDefinition nameAttribute = memberType.GetAttributeDefinition("Name");
+                IAttributeDefinition nicknameAttribute = memberType.GetAttributeDefinition("Nickname");
+                IAttributeDefinition emailAttribute = memberType.GetAttributeDefinition("Email");
+                IAttributeDefinition defaultRoleAttribute = memberType.GetAttributeDefinition("DefaultRole");
 
-            newMember.SetAttributeValue(usernameAttribute, username);
-            newMember.SetAttributeValue(nameAttribute, user.FullName);
-            newMember.SetAttributeValue(nicknameAttribute, user.Nickname);
-            newMember.SetAttributeValue(emailAttribute, user.Email);
-            newMember.SetAttributeValue(defaultRoleAttribute, "Role:4");
+                newMember.SetAttributeValue(usernameAttribute, username);
+                newMember.SetAttributeValue(nameAttribute, user.FullName);
+                newMember.SetAttributeValue(nicknameAttribute, user.Nickname);
+                newMember.SetAttributeValue(emailAttribute, user.Email);
+                newMember.SetAttributeValue(defaultRoleAttribute, "Role:4"); //Refactor to be set via config and held in a Class-level field 
 
-            services.Save(newMember);
-            
-            //Verify result
-            // DO THAT HERE
+                services.Save(newMember);
+                
+                //Verify that the V1 user was created
+                Oid newMemberOid = GetMemberOidByUsername(username);
+                if (newMemberOid != null)
+                {
+                    resultString = "Member with username '" + username + "' has been created in the VersionOne system.";
+                }
+                else
+                {
+                    throw new Exception();
+                }    
+            }
 
-            /* Log result to a file
-             * REFACTOR THIS TO USE A CLASS-LEVEL STRINGBUILDER AND THEN LOG THE STRING AT ONCE,
-             * INSTEAD OF HAVING FILE IO WITH EVERY USER PROCESSED
-            */
-            string msgString = "Username " + username + " has been created in the VersionOne system.";
-            LogActionResult(msgString);
+            catch (Exception)
+            {
+                resultString = "Attempt to create Member with username '" + username + "' in the VersionOne system has FAILED.";
+            }
+
+            finally
+            {
+                /* Cache the result for logging */
+                logstring.AppendLine(DateTime.Now + ": " + resultString);    
+            }
         }
 
         private Oid GetMemberOidByUsername(string username)
@@ -212,18 +233,25 @@ namespace VersionOne.Provisioning
             userQuery.Filter = term;
 
             QueryResult result = services.Retrieve(userQuery);
-            return result.Assets[0].Oid;
-        }
+            if (result.Assets.Count > 0)
+            {
+                return result.Assets[0].Oid;
+            }
+            else
+            {
+                return null;
+            }
+           }
 
-        private void LogActionResult(string message)
+        private void LogActionResult(StringBuilder message)
         {
-            /* REFACTOR THIS INTO TO A "MESSAGING AND LOGGING" CLASS */
-            string textToWrite = message;
+            /* REFACTOR THIS INTO TO A "MESSAGING AND LOGGING" CLASS(?) */
+            string textToWrite = message.ToString();
             string path = @"C:\testlogs\samplelog.txt"; //NEEDS TO BE DYNAMIC -- HARD-CODED FOR TESTING ONLY.
             FileStream fstream = new FileStream(path, FileMode.Append, FileAccess.Write);
             StreamWriter logger = new StreamWriter(fstream);
 
-            logger.WriteLine(DateTime.Now + ": " + textToWrite);
+            logger.Write(textToWrite);
             logger.Close();
         }
         
