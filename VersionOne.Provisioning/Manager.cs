@@ -11,12 +11,22 @@ namespace VersionOne.Provisioning
     {
         private IServices services;
         private IMetaModel model;
-        private StringBuilder logstring;
+        public StringBuilder logstring;
+        private string defaultRole;
+        //private bool inTestMode;
+        public List<User> deactivatedMembers;
+        public List<User> newMembers;
 
-        public Manager(IServices services, IMetaModel model)
+        public Manager(IServices services, IMetaModel model, string defaultRole)
         {
             this.services = services;
             this.model = model;
+            this.defaultRole = defaultRole;
+            logstring = new StringBuilder();
+
+            deactivatedMembers = new List<User>();
+            newMembers = new List<User>();
+            
         }
 
         public AssetList GetVersionOneUsers()
@@ -119,42 +129,47 @@ namespace VersionOne.Provisioning
              * action in V1. 
             */
 
-            logstring = new StringBuilder();
-
+            
             foreach (User user in actionList)
             {
                 if (user.Deactivate == true)
                 {
-                    string username = user.Username;
-                    //Use a query filtered on username to get the Oid of the member...
-                    Oid memberOid = GetMemberOidByUsername(username);
-
-                    //Deactivate the user in V1. 
-                    DeactivateVersionOneMember(memberOid, username);
-
+                    DeactivateVersionOneMember(user);
                 }
                 else if (user.Create == true)
                 {
                     CreateNewVersionOneMember(user);
                 }
-
-            }
-            
+                else if (user.Reactivate == true)
+                {
+                    ReactivateVersionOneMember(user);
+                }
+                else if (user.Delete == true)
+                {
+                    DeleteVersionOneMember(user);
+                }
+             }
+                
             //Flush the cached messaging to the log file
             LogActionResult(logstring);
 
         }
 
         
-        private void DeactivateVersionOneMember(Oid memberOid, string uname)
+        private void DeactivateVersionOneMember(User user)
         {
             string resultString = "";
+            string uname = user.Username;
 
             try
             {
+                Oid memberOid = GetMemberOidByUsername(uname);
                 IOperation inactivateMember = model.GetOperation(V1Constants.INACTIVATE);
                 Oid inactivatedOid = services.ExecuteOperation(inactivateMember, memberOid);
-    
+
+                user.Oid = memberOid;
+                deactivatedMembers.Add(user);
+                
                 resultString = "Member with username '" + uname + "' has been deactivated in the VersionOne system.";
             }
 
@@ -166,15 +181,15 @@ namespace VersionOne.Provisioning
             finally
             {
                 /* Cache the result for logging */
-                logstring.AppendLine(DateTime.Now + ": " + resultString);    
+                logstring.AppendLine(DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss:ffff") + ": " + resultString);    
             }
             
         }
 
         private void CreateNewVersionOneMember(User user)
         {
-            //Make the appropriate API calls to create the member, with username, fullname, nickname, email.
-            //Role will default to Team Member.
+            //Make the appropriate API calls to create the member, with username, fullname, nickname, email, and default role.
+            //Default Role will default to Team Member if that attribute is left out.
 
             string username = user.Username;
             string resultString = "";
@@ -193,7 +208,7 @@ namespace VersionOne.Provisioning
                 newMember.SetAttributeValue(nameAttribute, user.FullName);
                 newMember.SetAttributeValue(nicknameAttribute, user.Nickname);
                 newMember.SetAttributeValue(emailAttribute, user.Email);
-                newMember.SetAttributeValue(defaultRoleAttribute, "Role:4"); //Refactor to be set via config and held in a Class-level field 
+                newMember.SetAttributeValue(defaultRoleAttribute, this.defaultRole);  
 
                 services.Save(newMember);
                 
@@ -201,6 +216,9 @@ namespace VersionOne.Provisioning
                 Oid newMemberOid = GetMemberOidByUsername(username);
                 if (newMemberOid != null)
                 {
+                    user.Oid = newMemberOid;
+                    newMembers.Add(user);
+                    
                     resultString = "Member with username '" + username + "' has been created in the VersionOne system.";
                 }
                 else
@@ -217,7 +235,7 @@ namespace VersionOne.Provisioning
             finally
             {
                 /* Cache the result for logging */
-                logstring.AppendLine(DateTime.Now + ": " + resultString);    
+                logstring.AppendLine(DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss:ffff") + ": " + resultString);    
             }
         }
 
@@ -243,7 +261,63 @@ namespace VersionOne.Provisioning
             }
            }
 
-        private void LogActionResult(StringBuilder message)
+        public void ReactivateVersionOneMember(User deactivatedUser)
+        {
+            string resultString = "";
+            string uname = deactivatedUser.Username;
+
+            try
+            {
+                Oid memberOid = GetMemberOidByUsername(uname);
+
+                IOperation reactivateMember = model.GetOperation(V1Constants.REACTIVATE);
+                Oid inactivatedOid = services.ExecuteOperation(reactivateMember, memberOid);
+
+                resultString = "Member with username '" + uname + "' has been reactivated in the VersionOne system.";
+            }
+
+            catch (Exception)
+            {
+                resultString = "Attempt to reactivate Member with username '" + uname + "' in the VersionOne system has FAILED.";
+            }
+
+            finally
+            {
+                /* Cache the result for logging */
+                logstring.AppendLine(DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss:ffff") + ": " + resultString);
+            }
+
+        }
+
+        public void DeleteVersionOneMember(User userToDelete)
+        {
+            string resultString = "";
+            string uname = userToDelete.Username;
+
+            try
+            {
+                Oid memberOid = GetMemberOidByUsername(uname);
+
+                IOperation deleteMember = model.GetOperation(V1Constants.DELETE);
+                Oid deletedOid = services.ExecuteOperation(deleteMember, memberOid);
+
+                resultString = "Member with username '" + uname + "' has been deleted in the VersionOne system.";
+            }
+
+            catch (Exception)
+            {
+                resultString = "Attempt to delete Member with username '" + uname + "' in the VersionOne system has FAILED.";
+            }
+
+            finally
+            {
+                /* Cache the result for logging */
+                logstring.AppendLine(DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss:ffff") + ": " + resultString);
+            }
+
+        }
+
+        public void LogActionResult(StringBuilder message)
         {
             /* REFACTOR THIS INTO TO A "MESSAGING AND LOGGING" CLASS(?) */
             string textToWrite = message.ToString();
@@ -252,6 +326,7 @@ namespace VersionOne.Provisioning
             StreamWriter logger = new StreamWriter(fstream);
 
             logger.Write(textToWrite);
+            message.Remove(0, message.Length);
             logger.Close();
         }
         

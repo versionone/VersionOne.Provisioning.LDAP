@@ -27,9 +27,35 @@ namespace VersionOne.Provisioning.Tests
             
             model = new MetaModel(metaConnector);
             services = new Services(model,servicesConnector);
-            manager = new Manager(services,model);
+            manager = new Manager(services, model,"Role:4");
             usernameAttribute = model.GetAttributeDefinition(V1Constants.USERNAME);
             GetTestV1Users();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            //Delete any users created by the unit tests
+            if (manager.newMembers.Count > 0)
+            {
+                foreach (User userAdded in manager.newMembers)
+                {
+                    manager.DeleteVersionOneMember(userAdded);
+                }
+
+            }
+
+            //Reactivate any users deactivated by the unit tests
+            if (manager.deactivatedMembers.Count > 0)
+            {
+                foreach (User inactiveMember in manager.deactivatedMembers)
+                {
+                    manager.ReactivateVersionOneMember(inactiveMember);
+                }
+            }
+
+            //Flush any cached messaging to the log file
+            manager.LogActionResult(manager.logstring);
         }
 
         [Test]

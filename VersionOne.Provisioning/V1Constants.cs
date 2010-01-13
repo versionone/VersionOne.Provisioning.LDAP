@@ -11,7 +11,8 @@ namespace VersionOne.Provisioning
         public const string USERNAME = MEMBER + ".Username";
         public const string ISINACTIVE = MEMBER + ".IsInactive";
         public const string INACTIVATE = MEMBER + ".Inactivate";
-
+        public const string REACTIVATE = MEMBER + ".Reactivate";
+        public const string DELETE = MEMBER + ".Delete";
         
     }
 }

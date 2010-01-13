@@ -18,7 +18,13 @@ namespace VersionOne.Provisioning
 
         public bool Create { get; set; }
 
+        public bool Delete { get; set; }
+
         public bool Deactivate { get; set; }
+
+        public bool Reactivate { get; set; }
+
+        public Oid Oid { get; set; }
 
         public Asset UserToDeactivate {get; set;}
     }
