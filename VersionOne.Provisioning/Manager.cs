@@ -13,7 +13,6 @@ namespace VersionOne.Provisioning
         private IMetaModel model;
         public StringBuilder logstring;
         private string defaultRole;
-        //private bool inTestMode;
         public List<User> deactivatedMembers;
         public List<User> newMembers;
 
@@ -26,7 +25,6 @@ namespace VersionOne.Provisioning
 
             deactivatedMembers = new List<User>();
             newMembers = new List<User>();
-            
         }
 
         public AssetList GetVersionOneUsers()
@@ -72,22 +70,14 @@ namespace VersionOne.Provisioning
 
         private void AddInactiveUsersToActionList(IList<string> v1Usernames, IList<User> v1ActionList)
         {
-            //User[] v1UsersToDeactivate = new User[v1Usernames.Count];
-            for (int i = 0; i < v1Usernames.Count; i++)
+           for (int i = 0; i < v1Usernames.Count; i++)
             {
                 if (v1Usernames[i] != "admin")  //don't deactivate the main admin login
                 {
-                    //v1UsersToDeactivate[i] = new User();
-                    //v1UsersToDeactivate[i].Deactivate = true;
-                    //v1UsersToDeactivate[i].Username = v1Usernames[i];
-                    //v1ActionList.Add(v1UsersToDeactivate[i]);
-
-
                     User user = new User();
                     user.Username = v1Usernames[i];
                     user.Deactivate = true;
                     v1ActionList.Add(user);
-
                 }
 
             }
