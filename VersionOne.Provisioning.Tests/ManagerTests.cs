@@ -78,26 +78,26 @@ namespace VersionOne.Provisioning.Tests
         }
 
         //[Test]
-        //public void TestCompareUsers()
-        //{
-        //    IList<User> usersFromLdap = CreateTestLdapUsers();
-        //    Assert.AreEqual(10,usersFromLdap.Count); //make sure the usersFromLdap List was populated correctly
-            
-        //    Assert.AreEqual(11, usersFromV1.Count);  //make sure the V1 users List was populated correctly
+        public void TestCompareUsers()
+        {
+            IList<User> usersFromLdap = CreateTestLdapUsers();
+            Assert.AreEqual(10, usersFromLdap.Count); //make sure the usersFromLdap List was populated correctly
 
-        //    IList<User> usersToAction = manager.CompareUsers(usersFromLdap, usersFromV1);
-        //    //userstoAction should contain the user objects from the array passed in that need to be created
-        //    //as well as some new user objects that simply have username and deactivate=true
+            Assert.AreEqual(11, usersFromV1.Count);  //make sure the V1 users List was populated correctly
 
-        //    //based on what you put in the usersFromLdap array, test for how many users should be in the userstoUpdate List
-        //    //and check that the correct ones are set to Create or Deactivate.
-        //    Assert.AreEqual(2, usersToAction.Count);
-        //    Assert.IsTrue(usersToAction[0].Username == "Fred");
-        //    Assert.IsTrue(usersToAction[1].Username == "vijay");
-        //    Assert.IsTrue(usersToAction[0].Create == true);
-        //    Assert.IsTrue(usersToAction[1].Deactivate == true);
-            
-        //}
+            IList<User> usersToAction = manager.CompareUsers(usersFromLdap, usersFromV1);
+            //userstoAction should contain the user objects from the array passed in that need to be created
+            //as well as some new user objects that simply have username and deactivate=true
+
+            //based on what you put in the usersFromLdap array, test for how many users should be in the userstoUpdate List
+            //and check that the correct ones are set to Create or Deactivate.
+            Assert.AreEqual(2, usersToAction.Count);
+            Assert.IsTrue(usersToAction[0].Username == "Fred");
+            Assert.IsTrue(usersToAction[1].Username == "vijay");
+            Assert.IsTrue(usersToAction[0].Create == true);
+            Assert.IsTrue(usersToAction[1].Deactivate == true);
+
+        }
 
         [Test]
         public void TestUpdateVersionOne()
