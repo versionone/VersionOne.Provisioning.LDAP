@@ -7,6 +7,8 @@ using System.Text;
 // ReSharper restore RedundantUsingDirective
 using NUnit.Framework;
 using VersionOne.SDK.APIClient;
+using VersionOne.Provisioning.Logging;
+using System.Configuration;
 
 namespace VersionOne.Provisioning.Tests
 {
@@ -18,16 +20,41 @@ namespace VersionOne.Provisioning.Tests
         private IServices services;
         private AssetList usersFromV1;
         private IAttributeDefinition usernameAttribute;
+        private string _V1Instance;
+        private string _V1Login;
+        private string _V1Password;
+        private string _V1DefaultRole;
+        private string _ldapServerPath;
+        private string _ldapGroupDN;
+        private string _ldapUsername;
+        private string _ldapPassword;
+        private string _logpath;
 
         [SetUp]
         public void SetUp()
         {
-            IAPIConnector metaConnector = new V1APIConnector("http://localhost/demo/meta.v1/");
-            IAPIConnector servicesConnector = new V1APIConnector("http://localhost/demo/rest-1.v1/", "admin", "admin");
+            _V1Instance = ConfigurationManager.AppSettings["V1Instance"];
+            _V1Login = ConfigurationManager.AppSettings["V1InstanceUsername"];
+            _V1Password = ConfigurationManager.AppSettings["V1InstancePassword"];
+            _V1DefaultRole = ConfigurationManager.AppSettings["V1UserDefaultRole"];
+            _ldapServerPath = ConfigurationManager.AppSettings["ldapServerPath"];
+            _ldapGroupDN = ConfigurationManager.AppSettings["ldapGroupDN"];
+            _ldapUsername = ConfigurationManager.AppSettings["ldapUsername"];
+            _ldapPassword = ConfigurationManager.AppSettings["ldapPassword"];
+            _logpath = ConfigurationManager.AppSettings["logPath"];
+            
+            //IAPIConnector metaConnector = new V1APIConnector("http://localhost/demo/meta.v1/");
+            //IAPIConnector servicesConnector = new V1APIConnector("http://localhost/demo/rest-1.v1/", "admin", "admin");
+
+            IAPIConnector metaConnector = new V1APIConnector(_V1Instance + @"meta.v1/");
+            IAPIConnector servicesConnector = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password);
             
             model = new MetaModel(metaConnector);
             services = new Services(model,servicesConnector);
-            manager = new Manager(services, model,"Role:4");
+            
+            //manager = new Manager(services, model, "Role:4", @"C:\testlogs\samplelog.txt");
+            manager = new Manager(services, model, _V1DefaultRole, _logpath);
+            
             usernameAttribute = model.GetAttributeDefinition(V1Constants.USERNAME);
             GetTestV1Users();
         }
@@ -56,6 +83,15 @@ namespace VersionOne.Provisioning.Tests
 
             //Flush any cached messaging to the log file
             manager.LogActionResult(manager.logstring);
+        }
+
+        [Test]
+        public void TestBuildLDAPUsersList()
+        {
+            IList<User> ldapUsersList = new List<User>();
+            ldapUsersList = manager.BuildLdapUsersList(_ldapServerPath, _ldapGroupDN, _ldapUsername, _ldapPassword);
+            Assert.AreEqual(28, ldapUsersList.Count);
+            
         }
 
         [Test]
