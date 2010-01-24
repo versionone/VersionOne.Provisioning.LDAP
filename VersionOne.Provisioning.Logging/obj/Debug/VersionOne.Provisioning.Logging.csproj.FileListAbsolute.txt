@@ -1,0 +1,5 @@
+C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Logging\bin\Debug\VersionOne.Provisioning.Logging.dll
+C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Logging\bin\Debug\VersionOne.Provisioning.Logging.pdb
+C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Logging\obj\Debug\ResolveAssemblyReference.cache
+C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Logging\obj\Debug\VersionOne.Provisioning.Logging.dll
+C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Logging\obj\Debug\VersionOne.Provisioning.Logging.pdb
