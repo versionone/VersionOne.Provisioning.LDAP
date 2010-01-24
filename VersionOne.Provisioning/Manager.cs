@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.DirectoryServices;
 using VersionOne.SDK.APIClient;
+using VersionOne.Provisioning.LDAP;
+using VersionOne.Provisioning.Logging;
 
 namespace VersionOne.Provisioning
 {
@@ -15,14 +18,15 @@ namespace VersionOne.Provisioning
         private string defaultRole;
         public List<User> deactivatedMembers;
         public List<User> newMembers;
+        public string logPath;
 
-        public Manager(IServices services, IMetaModel model, string defaultRole)
+        public Manager(IServices services, IMetaModel model, string defaultRole, string logPath)
         {
             this.services = services;
             this.model = model;
             this.defaultRole = defaultRole;
+            this.logPath = logPath;
             logstring = new StringBuilder();
-
             deactivatedMembers = new List<User>();
             newMembers = new List<User>();
         }
@@ -38,7 +42,57 @@ namespace VersionOne.Provisioning
             //IAttributeDefinition isInactive = model.GetAttributeDefinition(V1Constants.ISINACTIVE);
 
             QueryResult result = services.Retrieve(userQuery);
+
             return result.Assets;
+        }
+
+        public IList<User> BuildLdapUsersList(string serverpath, string groupDN, string username, string pwd)
+        {
+            try
+            {
+                LDAPReader ldapReader = new LDAPReader();
+
+                logstring.AppendLine(DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss:ffff") + ": Retrieving users from LDAP...");
+                LogActionResult(logstring);
+
+                IList<LDAPUser> ldapUserInfo = ldapReader.GetUsersFromLdap(serverpath,groupDN,username,pwd);
+
+                //testing
+                logstring.AppendLine(DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss:ffff") + ": Count of users retrieved from LDAP: " + ldapUserInfo.Count.ToString()); //testing
+                LogActionResult(logstring);
+                //testing
+
+                IList<User> ldapUsers = new List<User>();
+
+                //Get the Ldapuser data into a Provisioning.User collection.
+                foreach (LDAPUser ldapUser in ldapUserInfo)
+                {
+                    User user = new User();
+                    user.Username = ldapUser.Username;
+                    user.FullName = ldapUser.FullName;
+                    user.Email = ldapUser.Email;
+                    user.Nickname = ldapUser.Nickname;
+
+                    ldapUsers.Add(user);
+
+                    //testing
+                    logstring.AppendLine(user.Username + " " + user.FullName + " " + user.Email + " " + user.Nickname);
+                    //testing
+                }
+
+                LogActionResult(logstring); //testing
+                return ldapUsers;
+            }
+            catch(Exception ex)
+            {
+                logstring.AppendLine(DateTime.Now.ToString("yyyy.MM.dd HH:mm:ss:ffff") + ": " + ex.Message.ToString());
+                return null;
+            }
+            finally
+            {
+                LogActionResult(logstring);
+                
+            }
         }
 
         public IList<User> CompareUsers(IList<User> ldapUsers, AssetList versionOneUsers)
@@ -89,12 +143,12 @@ namespace VersionOne.Provisioning
             {
                 if (v1Usernames.Contains(userInLdap.Username))
                 {
-                    v1Usernames.Remove(userInLdap.Username);    //should be removing 9, So 11-9 = 2 (admin and vijay)
+                    v1Usernames.Remove(userInLdap.Username);    //User exists in both systems, so there's nothing more to do.
                 }
                 else
                 {
                     userInLdap.Create = true;
-                    v1ActionList.Add(userInLdap);
+                    v1ActionList.Add(userInLdap);               //User needs to be created in V1.
                 }
             }
         }
@@ -309,16 +363,21 @@ namespace VersionOne.Provisioning
 
         public void LogActionResult(StringBuilder message)
         {
-            /* REFACTOR THIS INTO TO A "MESSAGING AND LOGGING" CLASS(?) */
-            string textToWrite = message.ToString();
-            string path = @"C:\testlogs\samplelog.txt"; //NEEDS TO BE DYNAMIC -- HARD-CODED FOR TESTING ONLY.
-            FileStream fstream = new FileStream(path, FileMode.Append, FileAccess.Write);
-            StreamWriter logger = new StreamWriter(fstream);
+            Logger textLogger = new Logger(logPath);
+            textLogger.LogToTextFile(message);
 
-            logger.Write(textToWrite);
-            message.Remove(0, message.Length);
-            logger.Close();
+            ///* REFACTOR THIS INTO TO A "MESSAGING AND LOGGING" CLASS(?) */
+            //string textToWrite = message.ToString();
+            //string path = @"C:\testlogs\samplelog.txt"; //NEEDS TO BE DYNAMIC -- HARD-CODED FOR TESTING ONLY.
+            //FileStream fstream = new FileStream(path, FileMode.Append, FileAccess.Write);
+            //StreamWriter logger = new StreamWriter(fstream);
+
+            //logger.Write(textToWrite);
+            //message.Remove(0, message.Length);
+            //logger.Close();
         }
+
+        
+      }
         
     }
-}
