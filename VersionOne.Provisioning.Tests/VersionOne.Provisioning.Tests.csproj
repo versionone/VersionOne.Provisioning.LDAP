@@ -36,9 +36,11 @@
       <HintPath>..\VersionOne.Provisioning\Common\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -53,15 +55,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="ManagerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\VersionOne.Provisioning.Logging\VersionOne.Provisioning.Logging.csproj">
+      <Project>{BDB3E68B-71D2-475C-A305-323410CE8A8E}</Project>
+      <Name>VersionOne.Provisioning.Logging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\VersionOne.Provisioning\VersionOne.Provisioning.csproj">
       <Project>{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}</Project>
       <Name>VersionOne.Provisioning</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
