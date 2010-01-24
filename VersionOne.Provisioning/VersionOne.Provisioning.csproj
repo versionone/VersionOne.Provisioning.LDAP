@@ -37,6 +37,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -56,6 +57,16 @@
   <ItemGroup>
     <Content Include="Common\nunit.framework.dll" />
     <Content Include="Common\VersionOne.SDK.APIClient.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VersionOne.Provisioning.LDAP\VersionOne.Provisioning.LDAP.csproj">
+      <Project>{D347843E-F5DE-42BB-9D5D-86237495ECBD}</Project>
+      <Name>VersionOne.Provisioning.LDAP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VersionOne.Provisioning.Logging\VersionOne.Provisioning.Logging.csproj">
+      <Project>{BDB3E68B-71D2-475C-A305-323410CE8A8E}</Project>
+      <Name>VersionOne.Provisioning.Logging</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
