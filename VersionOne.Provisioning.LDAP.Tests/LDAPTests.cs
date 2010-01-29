@@ -36,7 +36,7 @@ namespace VersionOne.Provisioning.LDAP.Tests
             ldapUsers = ldapReader.GetUsersFromLdap(_ldapServerPath,_ldapGroupDN,_ldapUsername,_ldapPassword);
              
             
-            Assert.AreEqual(28,ldapUsers.Count);
+            Assert.AreEqual(2,ldapUsers.Count);
 
             
           

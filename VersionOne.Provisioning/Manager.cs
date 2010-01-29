@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.IO;
 using System.DirectoryServices;
+using NLog;
 using VersionOne.SDK.APIClient;
 using VersionOne.Provisioning.LDAP;
-using VersionOne.Provisioning.Logging;
 
 namespace VersionOne.Provisioning
 {
@@ -18,14 +20,17 @@ namespace VersionOne.Provisioning
         private string defaultRole;
         public List<User> deactivatedMembers;
         public List<User> newMembers;
-        public string logPath;
 
-        public Manager(IServices services, IMetaModel model, string defaultRole, string logPath)
+        private static Logger logger = LogManager.GetCurrentClassLogger();
+        private SmtpAdaptor smtpAdaptor;
+
+
+        public Manager(IServices services, IMetaModel model, string defaultRole, SmtpAdaptor smtpAdaptor)
         {
             this.services = services;
             this.model = model;
             this.defaultRole = defaultRole;
-            this.logPath = logPath;
+            this.smtpAdaptor = smtpAdaptor;
             logstring = new StringBuilder();
             deactivatedMembers = new List<User>();
             newMembers = new List<User>();
@@ -37,7 +42,11 @@ namespace VersionOne.Provisioning
             Query userQuery = new Query(memberType);
 
             IAttributeDefinition username = model.GetAttributeDefinition(V1Constants.USERNAME);
+            IAttributeDefinition isInactive = memberType.GetAttributeDefinition("IsInactive");
             userQuery.Selection.Add(username);
+            FilterTerm term = new FilterTerm(isInactive);
+            term.Equal(false);
+            userQuery.Filter = term;
 
             //IAttributeDefinition isInactive = model.GetAttributeDefinition(V1Constants.ISINACTIVE);
 
@@ -122,6 +131,47 @@ namespace VersionOne.Provisioning
 
         }
 
+        public void UpdateVersionOne(IList<User> actionList)
+        {
+            /*
+             * Takes the action list that resulted from the comparison between 
+             * the LDAP user list and the V1 user list, and takes the appropriate 
+             * action in V1. 
+            */
+            StringCollection deactivatedUsers = new StringCollection();
+            StringCollection addedUsers = new StringCollection();
+
+            foreach (User user in actionList)
+            {
+                if (user.Deactivate)
+                {
+                    DeactivateVersionOneMember(user);
+                    deactivatedUsers.Add(user.Username);
+                }
+                else if (user.Create)
+                {
+                    CreateNewVersionOneMember(user);
+                    addedUsers.Add(user.Username);
+                }
+                else if (user.Reactivate)
+                {
+                    ReactivateVersionOneMember(user);
+                }
+                else if (user.Delete)
+                {
+                    DeleteVersionOneMember(user);
+                }
+            }
+
+            //Flush the cached messaging to the log file
+            LogActionResult(logstring);
+            if (addedUsers.Count > 0 || deactivatedUsers.Count > 0)
+            {
+                smtpAdaptor.SendAdminNotification(addedUsers, deactivatedUsers);
+            }
+        }
+
+
         private void AddInactiveUsersToActionList(IList<string> v1Usernames, IList<User> v1ActionList)
         {
            for (int i = 0; i < v1Usernames.Count; i++)
@@ -165,39 +215,6 @@ namespace VersionOne.Provisioning
             return v1Usernames;
         }
 
-        public void UpdateVersionOne(IList<User> actionList)
-        {
-            /*
-             * Takes the action list that resulted from the comparison between 
-             * the LDAP user list and the V1 user list, and takes the appropriate 
-             * action in V1. 
-            */
-
-            
-            foreach (User user in actionList)
-            {
-                if (user.Deactivate == true)
-                {
-                    DeactivateVersionOneMember(user);
-                }
-                else if (user.Create == true)
-                {
-                    CreateNewVersionOneMember(user);
-                }
-                else if (user.Reactivate == true)
-                {
-                    ReactivateVersionOneMember(user);
-                }
-                else if (user.Delete == true)
-                {
-                    DeleteVersionOneMember(user);
-                }
-             }
-                
-            //Flush the cached messaging to the log file
-            LogActionResult(logstring);
-
-        }
 
         
         private void DeactivateVersionOneMember(User user)
@@ -243,12 +260,14 @@ namespace VersionOne.Provisioning
                 IAssetType memberType = model.GetAssetType(V1Constants.MEMBER);
                 Asset newMember = services.New(memberType, null);
                 IAttributeDefinition usernameAttribute = memberType.GetAttributeDefinition("Username");
+                IAttributeDefinition passwordAttribute = memberType.GetAttributeDefinition("Password");
                 IAttributeDefinition nameAttribute = memberType.GetAttributeDefinition("Name");
                 IAttributeDefinition nicknameAttribute = memberType.GetAttributeDefinition("Nickname");
                 IAttributeDefinition emailAttribute = memberType.GetAttributeDefinition("Email");
                 IAttributeDefinition defaultRoleAttribute = memberType.GetAttributeDefinition("DefaultRole");
-
+                string password = username + Guid.NewGuid().ToString().Substring(0, 6);
                 newMember.SetAttributeValue(usernameAttribute, username);
+                newMember.SetAttributeValue(passwordAttribute, password);
                 newMember.SetAttributeValue(nameAttribute, user.FullName);
                 newMember.SetAttributeValue(nicknameAttribute, user.Nickname);
                 newMember.SetAttributeValue(emailAttribute, user.Email);
@@ -264,6 +283,7 @@ namespace VersionOne.Provisioning
                     newMembers.Add(user);
                     
                     resultString = "Member with username '" + username + "' has been created in the VersionOne system.";
+                    smtpAdaptor.SendUserNotification(username, password, user.Email);
                 }
                 else
                 {
@@ -363,18 +383,7 @@ namespace VersionOne.Provisioning
 
         public void LogActionResult(StringBuilder message)
         {
-            Logger textLogger = new Logger(logPath);
-            textLogger.LogToTextFile(message);
-
-            ///* REFACTOR THIS INTO TO A "MESSAGING AND LOGGING" CLASS(?) */
-            //string textToWrite = message.ToString();
-            //string path = @"C:\testlogs\samplelog.txt"; //NEEDS TO BE DYNAMIC -- HARD-CODED FOR TESTING ONLY.
-            //FileStream fstream = new FileStream(path, FileMode.Append, FileAccess.Write);
-            //StreamWriter logger = new StreamWriter(fstream);
-
-            //logger.Write(textToWrite);
-            //message.Remove(0, message.Length);
-            //logger.Close();
+            logger.Info(message);
         }
 
         

@@ -59,10 +59,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VersionOne.Provisioning.Logging\VersionOne.Provisioning.Logging.csproj">
-      <Project>{BDB3E68B-71D2-475C-A305-323410CE8A8E}</Project>
-      <Name>VersionOne.Provisioning.Logging</Name>
-    </ProjectReference>
     <ProjectReference Include="..\VersionOne.Provisioning\VersionOne.Provisioning.csproj">
       <Project>{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}</Project>
       <Name>VersionOne.Provisioning</Name>

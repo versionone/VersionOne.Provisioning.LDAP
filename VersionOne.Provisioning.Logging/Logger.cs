@@ -18,13 +18,17 @@ namespace VersionOne.Provisioning.Logging
         public void LogToTextFile(StringBuilder message)
         {
             string textToWrite = message.ToString();
-            string path = _logPath; 
-            FileStream fstream = new FileStream(path, FileMode.Append, FileAccess.Write);
-            StreamWriter swriter = new StreamWriter(fstream);
+            string path = _logPath;
+            using (FileStream fstream = new FileStream(path, FileMode.Append, FileAccess.Write))
+            {
+                using (StreamWriter swriter = new StreamWriter(fstream))
+                {
 
-            swriter.Write(textToWrite);
-            message.Remove(0, message.Length);
-            swriter.Close();
+                    swriter.Write(textToWrite);
+                    message.Remove(0, message.Length);
+                    swriter.Close();
+                }
+            }
         }
     }
 }

@@ -9,6 +9,5 @@ C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.
 C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Tests\obj\Debug\VersionOne.Provisioning.Tests.pdb
 C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Tests\bin\Debug\VersionOne.Provisioning.LDAP.dll
 C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Tests\bin\Debug\VersionOne.Provisioning.LDAP.pdb
-C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Tests\bin\Debug\VersionOne.Provisioning.Logging.dll
-C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Tests\bin\Debug\VersionOne.Provisioning.Logging.pdb
 C:\Projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Tests\bin\Debug\VersionOne.Provisioning.Tests.dll.config
+C:\projects\Trunk\V1Integration\VersionOne.Provisioning\VersionOne.Provisioning.Tests\bin\Debug\NLog.dll

@@ -7,7 +7,6 @@ using System.Text;
 // ReSharper restore RedundantUsingDirective
 using NUnit.Framework;
 using VersionOne.SDK.APIClient;
-using VersionOne.Provisioning.Logging;
 using System.Configuration;
 
 namespace VersionOne.Provisioning.Tests
@@ -53,7 +52,7 @@ namespace VersionOne.Provisioning.Tests
             services = new Services(model,servicesConnector);
             
             //manager = new Manager(services, model, "Role:4", @"C:\testlogs\samplelog.txt");
-            manager = new Manager(services, model, _V1DefaultRole, _logpath);
+            manager = new Manager(services, model, _V1DefaultRole, new SmtpAdaptor(new UserNotificationEmail(), new AdminNotificationEmail()));
             
             usernameAttribute = model.GetAttributeDefinition(V1Constants.USERNAME);
             GetTestV1Users();
