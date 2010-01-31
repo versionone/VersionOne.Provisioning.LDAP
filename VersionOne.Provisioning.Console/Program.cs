@@ -16,23 +16,19 @@ namespace VersionOne.Provisioning.Console
         {
             Manager manager = CreateManager();
 
-            manager.KeepReactivatedUserDefaultRole = true;
-            manager.KeepReactivatedUserDefaultRole = true;
-            manager.KeepReactivatedUserPassword = true;
-
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserProjectAccess"].Trim().ToUpper() != "TRUE")
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserProjectAccess"].Trim().ToUpper() != "FALSE")
             {
-                manager.KeepReactivatedUserProjectAccess = false;
+                manager.KeepReactivatedUserProjectAccess = true;
             }
 
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserDefaultRole"].Trim().ToUpper() != "TRUE")
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserDefaultRole"].Trim().ToUpper() != "FALSE")
             {
-                manager.KeepReactivatedUserDefaultRole = false;
+                manager.KeepReactivatedUserDefaultRole = true;
             }
 
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserPassword"].Trim().ToUpper() != "TRUE")
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserPassword"].Trim().ToUpper() != "FALSE")
             {
-                manager.KeepReactivatedUserPassword = false;
+                manager.KeepReactivatedUserPassword = true;
             }
 
             manager.UsernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];
