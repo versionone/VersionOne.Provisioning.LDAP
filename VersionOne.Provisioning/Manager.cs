@@ -76,9 +76,11 @@ namespace VersionOne.Provisioning
 
             IAttributeDefinition username = _model.GetAttributeDefinition(V1Constants.USERNAME);
             IAttributeDefinition isInactive = memberType.GetAttributeDefinition("IsInactive");
-
+            IAttributeDefinition ckInactivate = memberType.GetAttributeDefinition("CheckInactivate");
+            
             userQuery.Selection.Add(username);
             userQuery.Selection.Add(isInactive);
+            userQuery.Selection.Add(ckInactivate);
             QueryResult result = _services.Retrieve(userQuery);
 
             IList<User> v1UserList = new List<User>();
@@ -161,8 +163,9 @@ namespace VersionOne.Provisioning
                             //This LDAP user is in V1, but is inactive,
                             //so it needs to be reactivated in V1.
                             userInV1.Reactivate = true;
+                            userInV1.Email = userInLdap.Email;
                             v1ActionList.Add(userInV1);
-                            countUsersToDeactivate++;
+                            countUsersToReactivate++;
                         }
                     }
                 }
@@ -190,7 +193,7 @@ namespace VersionOne.Provisioning
                 
                 if (V1UserFoundInLDAP == false)
                 {
-                    if (userInV1.IsInactive == false)
+                    if (userInV1.CheckInactivate && userInV1.V1MemberAsset.Oid.Token != V1Constants.DEFAULTADMINOID)
                     {
                         //This V1 user is not in Ldap, but is active in V1, 
                         //so it needs to be deactivated in V1.
@@ -243,7 +246,6 @@ namespace VersionOne.Provisioning
                 }
             }
 
-            //Flush the cached messaging to the log file
             if (addedUsers.Count > 0 || deactivatedUsers.Count > 0 || reactivatedUsers.Count > 0)
             {
                 smtpAdaptor.SendAdminNotification(addedUsers, deactivatedUsers, reactivatedUsers);
@@ -267,24 +269,15 @@ namespace VersionOne.Provisioning
             IList<User> v1Usernames = new List<User>();
             IAttributeDefinition usernameAttribute = _model.GetAttributeDefinition(V1Constants.USERNAME);
             IAttributeDefinition isInactiveAttribute = _model.GetAttributeDefinition(V1Constants.ISINACTIVE);
+            IAttributeDefinition ckInactivate = _model.GetAttributeDefinition(V1Constants.CHECKINACTIVATE);
             
             foreach (Asset userinV1 in versionOneUsers)
             {
                 User v1User = new User();
                 v1User.Username = userinV1.GetAttribute(usernameAttribute).Value.ToString().Trim();
                 v1User.V1MemberAsset = userinV1;
-                
-                string strInactive = userinV1.GetAttribute(isInactiveAttribute).Value.ToString().Trim();
-                
-                if (strInactive.Trim().ToUpper() == "TRUE")
-                {
-                    v1User.IsInactive = true; 
-                }
-                else
-                {
-                    v1User.IsInactive = false;
-                }
-
+                v1User.CheckInactivate = bool.Parse(userinV1.GetAttribute(ckInactivate).Value.ToString());
+                v1User.IsInactive = bool.Parse(userinV1.GetAttribute(isInactiveAttribute).Value.ToString());
                 v1Usernames.Add(v1User);
             }
             return v1Usernames;
@@ -377,7 +370,7 @@ namespace VersionOne.Provisioning
         {
             /***
              * Reactivation is subject to a few parameters set in configuration.  
-             * These determine the user's Project Access, Deault Role, and Password upon reactivation.
+             * These determine the user's Project Access, Default Role, and Password upon reactivation.
              ****/ 
             
             string resultString = "";
@@ -388,25 +381,25 @@ namespace VersionOne.Provisioning
             try
             {
                 Asset member = userToReactivate.V1MemberAsset;
-                
-                //Assign the user a new password
-                Query query = new Query(memberOid);
-                IAttributeDefinition passwordAttribute = _model.GetAttributeDefinition(V1Constants.PASSWORD);
-                newPassword = GeneratePassword(username);
-                member.SetAttributeValue(passwordAttribute, newPassword);
-                query.Selection.Add(passwordAttribute);
-                 _services.Save(member);
 
                 //Reactivate the user
                 IOperation reactivateMember = _model.GetOperation(V1Constants.REACTIVATE);
-                Oid inactivatedOid = _services.ExecuteOperation(reactivateMember, memberOid);
+                _services.ExecuteOperation(reactivateMember, memberOid);
+
+                //Assign the user a new password
+                IAttributeDefinition passwordAttribute = _model.GetAttributeDefinition(V1Constants.PASSWORD);
+                newPassword = GeneratePassword(username);
+                member.SetAttributeValue(passwordAttribute, newPassword);
+                 _services.Save(member);
+
+                
                 smtpAdaptor.SendUserNotification(username, newPassword, userToReactivate.Email);
                 logger.Info("Member with username '" + username + "' has been REACTIVATED in the VersionOne system.");
             }
 
             catch (Exception ex)
             {
-                logger.ErrorException("Attempt to reactivate Member with username '" + username + "' in the VersionOne system has FAILED.",ex);
+                logger.ErrorException("Attempt to reactivate Member with username '" + username + "' in the VersionOne system has FAILED." + ex,ex);
             }
 
         }

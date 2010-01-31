@@ -7,31 +7,42 @@ using System.Linq;
 using System.Net.Mail;
 using System.Text;
 using VersionOne.SDK.APIClient;
+using NLog;
 
 namespace VersionOne.Provisioning.Console
 {
     class Program
     {
+        private static Logger logger = LogManager.GetCurrentClassLogger();
         static void Main(string[] args)
         {
-            Manager manager = CreateManager();
-
-            if (ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
+            try
             {
-                manager.UseDefaultLDAPCredentials = true;
+                Manager manager = CreateManager();
+
+                if (ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
+                {
+                    manager.UseDefaultLDAPCredentials = true;
+                }
+
+                manager.UsernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];
+                manager.FullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"];
+                manager.EmailMapping = ConfigurationManager.AppSettings["mapToV1Email"];
+                manager.NicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"];
+
+                IList<User> v1Users = manager.GetVersionOneUsers();
+                IList<User> ldapUsers = manager.BuildLdapUsersList(ConfigurationManager.AppSettings["ldapServerPath"],
+                                           ConfigurationManager.AppSettings["ldapGroupDN"],
+                                           ConfigurationManager.AppSettings["ldapUsername"], ConfigurationManager.AppSettings["ldapPasswword"]);
+                IList<User> actionUsers = manager.CompareUsers(ldapUsers, v1Users);
+                manager.UpdateVersionOne(actionUsers);
+           }
+            catch(Exception ex)
+            {
+                logger.ErrorException("An error has occurred.",ex);
+
             }
-
-            manager.UsernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];
-            manager.FullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"];
-            manager.EmailMapping = ConfigurationManager.AppSettings["mapToV1Email"];
-            manager.NicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"];
-
-            IList<User> v1Users = manager.GetVersionOneUsers();
-            IList<User> ldapUsers = manager.BuildLdapUsersList(ConfigurationManager.AppSettings["ldapServerPath"],
-                                       ConfigurationManager.AppSettings["ldapGroupDN"],
-                                       ConfigurationManager.AppSettings["ldapUsername"], ConfigurationManager.AppSettings["ldapPasswword"]);
-            IList<User> actionUsers = manager.CompareUsers(ldapUsers, v1Users);
-            manager.UpdateVersionOne(actionUsers);
+                
         }
 
         private static Manager CreateManager()

@@ -193,6 +193,23 @@ namespace VersionOne.Provisioning.Tests
             //Assert.IsTrue(usersToAction[1].Deactivate == true);
 
         }
+        [Test]
+        public void TestReactivateVersionOneMember()
+        {
+
+
+
+
+        }
+
+        [Test]
+        public void TestDeactivateVersionOneMember()
+        {
+
+
+
+
+        }
 
         private IList<User> CreateTestV1Users()
         {
@@ -241,7 +258,24 @@ namespace VersionOne.Provisioning.Tests
 
             IList<User> v1Users = manager.GetVersionOneUsers();
             Assert.AreEqual(12, v1Users.Count);
-
+            
+            IList<User> usersToReactivate = new List<User>();
+            userToDeactivate.Deactivate = false;
+            userToDeactivate.Reactivate = true;
+            string idToReactivate = userToDeactivate.V1MemberAsset.Oid.Token;
+            usersToReactivate.Add(userToDeactivate);
+            manager.UpdateVersionOne(usersToAction);
+            v1Users = manager.GetVersionOneUsers();
+            bool founduser = false;
+            foreach(User user in v1Users)
+            {
+                if(user.V1MemberAsset.Oid.Token == idToReactivate)
+                {
+                    founduser = true;
+                    Assert.False(user.IsInactive);
+                }
+            }
+            Assert.True(founduser);
         }
 
         private IList<User> CreateTestLdapUsers()
