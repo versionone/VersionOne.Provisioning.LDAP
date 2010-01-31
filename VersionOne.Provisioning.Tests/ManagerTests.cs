@@ -36,6 +36,7 @@ namespace VersionOne.Provisioning.Tests
         private string _fullnameMapping;
         private string _emailMapping;
         private string _nicknameMapping;
+        private bool _useDefaultLDAPCredentials;
 
         [SetUp]
         public void SetUp()
@@ -50,25 +51,14 @@ namespace VersionOne.Provisioning.Tests
             _ldapPassword = ConfigurationManager.AppSettings["ldapPassword"];
             _logpath = ConfigurationManager.AppSettings["logPath"];
             _usernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];
-            _fullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"]; ;
-            _emailMapping = ConfigurationManager.AppSettings["mapToV1Email"]; ;
-            _nicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"]; ;
+            _fullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"]; 
+            _emailMapping = ConfigurationManager.AppSettings["mapToV1Email"]; 
+            _nicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"];
 
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserProjectAccess"].Trim().ToUpper() != "FALSE")
+            if(ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
             {
-                _preserveReactivatedUserProjectAccess = true;
+                _useDefaultLDAPCredentials = true;
             }
-
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserDefaultRole"].Trim().ToUpper() != "FALSE")
-            {
-                _preserveReactivatedUserDefaultRole = true;
-            }
-
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserPassword"].Trim().ToUpper() != "FALSE")
-            {
-                _preserveReactivatedUserPassword = true;
-            }
-            
 
             IAPIConnector metaConnector = new V1APIConnector(_V1Instance + @"meta.v1/");
             IAPIConnector servicesConnector = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password);
@@ -79,13 +69,11 @@ namespace VersionOne.Provisioning.Tests
             //manager = new Manager(services, model, "Role:4", @"C:\testlogs\samplelog.txt");
             manager = new Manager(services, model, _V1DefaultRole, new SmtpAdaptor(new UserNotificationEmail(), new AdminNotificationEmail()));
 
-            manager.KeepReactivatedUserDefaultRole = _preserveReactivatedUserDefaultRole;
-            manager.KeepReactivatedUserPassword = _preserveReactivatedUserPassword;
-            manager.KeepReactivatedUserProjectAccess = _preserveReactivatedUserProjectAccess;
             manager.UsernameMapping = _usernameMapping;
             manager.FullnameMapping = _fullnameMapping;
             manager.EmailMapping = _emailMapping;
             manager.NicknameMapping = _nicknameMapping;
+            manager.UseDefaultLDAPCredentials = _useDefaultLDAPCredentials;
 
             usernameAttribute = model.GetAttributeDefinition(V1Constants.USERNAME);
             isInactiveAttribute = model.GetAttributeDefinition(V1Constants.ISINACTIVE);
@@ -118,9 +106,6 @@ namespace VersionOne.Provisioning.Tests
                     manager.ReactivateVersionOneMember(inactiveMember);
                 }
             }
-
-            //Flush any cached messaging to the log file
-            manager.LogActionResult(manager._logstring);
         }
 
         [Test]
@@ -129,6 +114,11 @@ namespace VersionOne.Provisioning.Tests
             IList<User> ldapUsersList = new List<User>();
             ldapUsersList = manager.BuildLdapUsersList(_ldapServerPath, _ldapGroupDN, _ldapUsername, _ldapPassword);
             Assert.AreEqual(2, ldapUsersList.Count);
+
+            foreach (User list in ldapUsersList)
+            {
+                Console.WriteLine(list.Username);
+            }
             
         }
 
@@ -139,18 +129,21 @@ namespace VersionOne.Provisioning.Tests
             IList<User> versionOneUsers = manager.GetVersionOneUsers();
             Assert.AreEqual(4,versionOneUsers.Count);
             //bool weFoundAndre = false;
-
+            
+            Console.WriteLine("----");
             foreach (User v1user in versionOneUsers)
             {
                 //string userName = asset.GetAttribute(usernameAttribute).Value.ToString();
                 //string inactiveUser = asset.GetAttribute(isInactiveAttribute).Value.ToString().ToUpper();
                 
+                Console.WriteLine(v1user.Username + " " + v1user.V1MemberAsset.Oid);
                 if (v1user.Username == "de")
                 {
                     //weFoundAndre = true;
                     Assert.IsTrue(v1user.IsInactive);
                 }
             }
+            Console.WriteLine("----");
             //Assert.IsTrue(weFoundAndre);
         }
 
@@ -290,7 +283,7 @@ namespace VersionOne.Provisioning.Tests
         {
             User user = CreateTestUser(username);
             user.Deactivate = true;
-            user.UserToDeactivate = GetTestV1User(username);
+            user.V1MemberAsset = GetTestV1User(username);
             return user;
         }
 

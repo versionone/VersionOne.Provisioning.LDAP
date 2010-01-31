@@ -16,19 +16,9 @@ namespace VersionOne.Provisioning.Console
         {
             Manager manager = CreateManager();
 
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserProjectAccess"].Trim().ToUpper() != "FALSE")
+            if (ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
             {
-                manager.KeepReactivatedUserProjectAccess = true;
-            }
-
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserDefaultRole"].Trim().ToUpper() != "FALSE")
-            {
-                manager.KeepReactivatedUserDefaultRole = true;
-            }
-
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserPassword"].Trim().ToUpper() != "FALSE")
-            {
-                manager.KeepReactivatedUserPassword = true;
+                manager.UseDefaultLDAPCredentials = true;
             }
 
             manager.UsernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];

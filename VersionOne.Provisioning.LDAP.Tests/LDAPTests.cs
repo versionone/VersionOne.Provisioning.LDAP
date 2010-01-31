@@ -14,6 +14,7 @@ namespace VersionOne.Provisioning.LDAP.Tests
         private string _ldapGroupDN;
         private string _ldapUsername;
         private string _ldapPassword;
+        private bool _useDefaultLDAPCredentials;
         
         [SetUp]      
         public void SetUp()
@@ -23,6 +24,10 @@ namespace VersionOne.Provisioning.LDAP.Tests
             _ldapUsername = ConfigurationManager.AppSettings["ldapUsername"];
             _ldapPassword = ConfigurationManager.AppSettings["ldapPassword"];
 
+            if (ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
+            {
+                _useDefaultLDAPCredentials = true;
+            }
         }
         
         [Test]
@@ -33,7 +38,7 @@ namespace VersionOne.Provisioning.LDAP.Tests
 
           //  ldapUsers = ldapReader.GetUsersFromLdap("192.168.36.4", "OU=Sales,OU=Users V1,DC=corp,DC=versionone,DC=net","","");
 
-            ldapUsers = ldapReader.GetUsersFromLdap(_ldapServerPath,_ldapGroupDN,_ldapUsername,_ldapPassword);
+            ldapUsers = ldapReader.GetUsersFromLdap(_ldapServerPath, _ldapGroupDN, _ldapUsername, _ldapPassword, ConfigurationManager.AppSettings["mapToV1Username"], ConfigurationManager.AppSettings["mapToV1Fullname"], ConfigurationManager.AppSettings["mapToV1Email"], ConfigurationManager.AppSettings["mapToV1Nickname"], _useDefaultLDAPCredentials);
              
             
             Assert.AreEqual(2,ldapUsers.Count);

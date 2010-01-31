@@ -36,9 +36,9 @@ namespace VersionOne.Provisioning
             Send(message);
         }
 
-        public void SendAdminNotification(StringCollection addedUsernames, StringCollection deactivatedUsernames)
+        public void SendAdminNotification(StringCollection addedUsernames, StringCollection deactivatedUsernames, StringCollection collection)
         {
-            string body = string.Format(adminEmail.Body, adminEmail.Subject, userEmail.VersionOneUrl, GetCommaDelimitedList(addedUsernames), GetCommaDelimitedList(deactivatedUsernames));
+            string body = string.Format(adminEmail.Body, adminEmail.Subject, userEmail.VersionOneUrl, GetCommaDelimitedList(addedUsernames), GetCommaDelimitedList(deactivatedUsernames), GetCommaDelimitedList(deactivatedUsernames));
             MailMessage message = new MailMessage(adminEmail.AdminEmail, adminEmail.AdminEmail, adminEmail.Subject, body) { IsBodyHtml = true };
             Send(message);
         }

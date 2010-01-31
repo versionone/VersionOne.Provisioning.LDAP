@@ -27,10 +27,7 @@ namespace VersionOne.Provisioning
 
         public bool Reactivate { get; set; }
 
-        public Oid Oid { get; set; }
-
-        public Asset UserToDeactivate {get; set;}
-        
+        public Asset V1MemberAsset {get; set;} //Oid is a property of the Asset, if needed
     }
 
   }
