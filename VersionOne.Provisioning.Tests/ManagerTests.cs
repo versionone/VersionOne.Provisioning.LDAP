@@ -54,23 +54,19 @@ namespace VersionOne.Provisioning.Tests
             _emailMapping = ConfigurationManager.AppSettings["mapToV1Email"]; ;
             _nicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"]; ;
 
-            _preserveReactivatedUserProjectAccess = true;
-            _preserveReactivatedUserDefaultRole = true;
-            _preserveReactivatedUserPassword = true;
-            
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserProjectAccess"].Trim().ToUpper() != "TRUE")
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserProjectAccess"].Trim().ToUpper() != "FALSE")
             {
-                _preserveReactivatedUserProjectAccess = false;
+                _preserveReactivatedUserProjectAccess = true;
             }
 
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserDefaultRole"].Trim().ToUpper() != "TRUE")
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserDefaultRole"].Trim().ToUpper() != "FALSE")
             {
-                _preserveReactivatedUserDefaultRole = false;
+                _preserveReactivatedUserDefaultRole = true;
             }
 
-            if (ConfigurationManager.AppSettings["preserveReactivatedUserPassword"].Trim().ToUpper() != "TRUE")
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserPassword"].Trim().ToUpper() != "FALSE")
             {
-                _preserveReactivatedUserPassword = false;
+                _preserveReactivatedUserPassword = true;
             }
             
 
