@@ -8,7 +8,7 @@ namespace VersionOne.Provisioning.LDAP
 {
     public class LDAPReader
     {
-        public IList<LDAPUser> GetUsersFromLdap(string serverpath, string groupDN, string username, string pwd)
+        public IList<LDAPUser> GetUsersFromLdap(string serverpath, string groupDN, string username, string pwd, string mapUsername, string mapFullname, string mapEmail, string mapNickname)
         {
             string serverPath = serverpath;
             string grpDN = groupDN;
@@ -27,10 +27,10 @@ namespace VersionOne.Provisioning.LDAP
                 {
                     LDAPUser user = new LDAPUser();
                     var member = new DirectoryEntry(root + memberPath);
-                    user.Username = member.InvokeGet("sAMAccountName").ToString(); //username
-                    user.FullName = member.InvokeGet("displayName").ToString(); //fullname
-                    user.Email = member.InvokeGet("mail").ToString(); //email
-                    user.Nickname = member.InvokeGet("sAMAccountName").ToString(); //nickname
+                    user.Username = member.InvokeGet(mapUsername).ToString(); //username
+                    user.FullName = member.InvokeGet(mapFullname).ToString(); //fullname
+                    user.Email = member.InvokeGet(mapEmail).ToString(); //email
+                    user.Nickname = member.InvokeGet(mapNickname).ToString(); //nickname
                     ldapUsersList.Add(user);
                 }
                 return ldapUsersList;

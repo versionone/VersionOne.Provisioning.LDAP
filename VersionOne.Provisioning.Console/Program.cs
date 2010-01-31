@@ -16,7 +16,31 @@ namespace VersionOne.Provisioning.Console
         {
             Manager manager = CreateManager();
 
-            AssetList v1Users = manager.GetVersionOneUsers();
+            manager.KeepReactivatedUserDefaultRole = true;
+            manager.KeepReactivatedUserDefaultRole = true;
+            manager.KeepReactivatedUserPassword = true;
+
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserProjectAccess"].Trim().ToUpper() != "TRUE")
+            {
+                manager.KeepReactivatedUserProjectAccess = false;
+            }
+
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserDefaultRole"].Trim().ToUpper() != "TRUE")
+            {
+                manager.KeepReactivatedUserDefaultRole = false;
+            }
+
+            if (ConfigurationManager.AppSettings["preserveReactivatedUserPassword"].Trim().ToUpper() != "TRUE")
+            {
+                manager.KeepReactivatedUserPassword = false;
+            }
+
+            manager.UsernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];
+            manager.FullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"];
+            manager.EmailMapping = ConfigurationManager.AppSettings["mapToV1Email"];
+            manager.NicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"];
+
+            IList<User> v1Users = manager.GetVersionOneUsers();
             IList<User> ldapUsers = manager.BuildLdapUsersList(ConfigurationManager.AppSettings["ldapServerPath"],
                                        ConfigurationManager.AppSettings["ldapGroupDN"],
                                        ConfigurationManager.AppSettings["ldapUsername"], ConfigurationManager.AppSettings["ldapPasswword"]);
@@ -59,6 +83,7 @@ namespace VersionOne.Provisioning.Console
             SmtpClient smtpClient = new SmtpClient();
             smtpClient.EnableSsl = bool.Parse(ConfigurationManager.AppSettings["smtpEnableSSL"]);
             SmtpAdaptor smtpAdaptor = new SmtpAdaptor(userNotificationEmail, adminNotificationEmail, smtpClient);
+
             return new Manager(services, metaModel, ConfigurationManager.AppSettings["V1UserDefaultRole"], smtpAdaptor);
         }
 

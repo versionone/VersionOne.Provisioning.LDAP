@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,8 @@ namespace VersionOne.Provisioning
 
         public string Email { get; set; }
 
+        public bool IsInactive { get; set; }  
+
         public bool Create { get; set; }
 
         public bool Delete { get; set; }
@@ -27,6 +30,7 @@ namespace VersionOne.Provisioning
         public Oid Oid { get; set; }
 
         public Asset UserToDeactivate {get; set;}
+        
     }
 
   }
