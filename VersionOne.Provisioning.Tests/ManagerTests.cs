@@ -37,6 +37,10 @@ namespace VersionOne.Provisioning.Tests
         private string _emailMapping;
         private string _nicknameMapping;
         private bool _useDefaultLDAPCredentials;
+        private string _proxyServerUri;
+        private string _proxyUsername;
+        private string _proxyPassword;
+        private string _proxyDomain;
 
         [SetUp]
         public void SetUp()
@@ -54,14 +58,34 @@ namespace VersionOne.Provisioning.Tests
             _fullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"]; 
             _emailMapping = ConfigurationManager.AppSettings["mapToV1Email"]; 
             _nicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"];
+            _proxyServerUri = ConfigurationManager.AppSettings["proxyServerUri"];
+            _proxyUsername = ConfigurationManager.AppSettings["proxyUsername"];
+            _proxyPassword = ConfigurationManager.AppSettings["proxyPassword"];
+            _proxyDomain = ConfigurationManager.AppSettings["proxyDomain"];
 
             if(ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
             {
                 _useDefaultLDAPCredentials = true;
             }
 
-            IAPIConnector metaConnector = new V1APIConnector(_V1Instance + @"meta.v1/");
-            IAPIConnector servicesConnector = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password);
+            IAPIConnector metaConnector;
+            IAPIConnector servicesConnector;
+            
+            //Added to work with a proxy
+            if(!String.IsNullOrEmpty(_proxyServerUri))
+            {
+                metaConnector = new V1APIConnector(_V1Instance + @"meta.v1/", _proxyServerUri,_proxyUsername,
+                                                                                                _proxyPassword, _proxyDomain);
+                servicesConnector = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password,
+                                                                                        false, _proxyServerUri, _proxyUsername,
+                                                                                                    _proxyPassword, _proxyDomain);
+            }
+            else
+            {
+                metaConnector = new V1APIConnector(_V1Instance + @"meta.v1/");
+                servicesConnector = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password);
+            }
+                
             
             model = new MetaModel(metaConnector);
             services = new Services(model,servicesConnector);

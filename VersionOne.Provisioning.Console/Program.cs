@@ -14,6 +14,11 @@ namespace VersionOne.Provisioning.Console
     class Program
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
+        private static string _proxyServerUri = ConfigurationManager.AppSettings["proxyServerUri"];
+        private static string _proxyUsername = ConfigurationManager.AppSettings["proxyUsername"];
+        private static string _proxyPassword = ConfigurationManager.AppSettings["proxyPassword"];
+        private static string _proxyDomain = ConfigurationManager.AppSettings["proxyDomain"];
+
         static void Main(string[] args)
         {
             try
@@ -29,7 +34,7 @@ namespace VersionOne.Provisioning.Console
                 manager.FullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"];
                 manager.EmailMapping = ConfigurationManager.AppSettings["mapToV1Email"];
                 manager.NicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"];
-
+                
                 IList<User> v1Users = manager.GetVersionOneUsers();
                 IList<User> ldapUsers = manager.BuildLdapUsersList(ConfigurationManager.AppSettings["ldapServerPath"],
                                            ConfigurationManager.AppSettings["ldapGroupDN"],
@@ -42,13 +47,33 @@ namespace VersionOne.Provisioning.Console
                 logger.ErrorException("An error has occurred.",ex);
 
             }
-                
+
         }
 
         private static Manager CreateManager()
         {
-            V1APIConnector metaConn = new V1APIConnector(ConfigurationManager.AppSettings["V1Instance"] + "/meta.v1/");
-            V1APIConnector dataConn = new V1APIConnector(ConfigurationManager.AppSettings["V1Instance"] + "/rest-1.v1/", ConfigurationManager.AppSettings["V1InstanceUsername"], ConfigurationManager.AppSettings["V1InstancePassword"]);
+            string _V1Instance = ConfigurationManager.AppSettings["V1Instance"];
+            string _V1Login = ConfigurationManager.AppSettings["V1InstanceUsername"];
+            string _V1Password = ConfigurationManager.AppSettings["V1InstancePassword"];
+            
+            IAPIConnector metaConn;
+            IAPIConnector dataConn;
+
+            //Added to work with a proxy
+            if (!String.IsNullOrEmpty(_proxyServerUri))
+            {
+                metaConn = new V1APIConnector(_V1Instance + @"meta.v1/", _proxyServerUri, _proxyUsername,
+                                                                                                _proxyPassword, _proxyDomain);
+                dataConn = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password,
+                                                                                        false, _proxyServerUri, _proxyUsername,
+                                                                                                    _proxyPassword, _proxyDomain);
+            }
+            else
+            {
+                metaConn = new V1APIConnector(_V1Instance + @"meta.v1/");
+                dataConn = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password);
+            }
+            
             IMetaModel metaModel = new MetaModel(metaConn);
             IServices services = new Services(metaModel, dataConn);
             UserNotificationEmail userNotificationEmail = new UserNotificationEmail
