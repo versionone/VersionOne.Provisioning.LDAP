@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Mail;
 using System.Text;
 using VersionOne.SDK.APIClient;
@@ -62,11 +63,10 @@ namespace VersionOne.Provisioning.Console
             //Added to work with a proxy
             if (!String.IsNullOrEmpty(_proxyServerUri))
             {
-                metaConn = new V1APIConnector(_V1Instance + @"meta.v1/", _proxyServerUri, _proxyUsername,
-                                                                                                _proxyPassword, _proxyDomain);
-                dataConn = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password,
-                                                                                        false, _proxyServerUri, _proxyUsername,
-                                                                                                    _proxyPassword, _proxyDomain);
+                WebProxyBuilder proxyBuilder = new WebProxyBuilder();
+                WebProxy webProxy = proxyBuilder.Build(_proxyServerUri, _proxyUsername, _proxyPassword, _proxyDomain);
+                metaConn = new V1APIConnector(_V1Instance + @"meta.v1/", webProxy);
+                dataConn = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password, false, webProxy);
             }
             else
             {

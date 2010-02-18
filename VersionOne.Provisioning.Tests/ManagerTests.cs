@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 // ReSharper disable RedundantUsingDirective
+using System.Net;
 using System.Text;
 // ReSharper restore RedundantUsingDirective
 using NUnit.Framework;
@@ -19,7 +20,6 @@ namespace VersionOne.Provisioning.Tests
         private IServices services;
         private AssetList usersFromV1;
         private IAttributeDefinition usernameAttribute;
-        private IAttributeDefinition isInactiveAttribute;
         private string _V1Instance;
         private string _V1Login;
         private string _V1Password;
@@ -28,10 +28,6 @@ namespace VersionOne.Provisioning.Tests
         private string _ldapGroupDN;
         private string _ldapUsername;
         private string _ldapPassword;
-        private string _logpath;
-        private bool _preserveReactivatedUserProjectAccess;
-        private bool _preserveReactivatedUserDefaultRole;
-        private bool _preserveReactivatedUserPassword;
         private string _usernameMapping;
         private string _fullnameMapping;
         private string _emailMapping;
@@ -53,7 +49,6 @@ namespace VersionOne.Provisioning.Tests
             _ldapGroupDN = ConfigurationManager.AppSettings["ldapGroupDN"];
             _ldapUsername = ConfigurationManager.AppSettings["ldapUsername"];
             _ldapPassword = ConfigurationManager.AppSettings["ldapPassword"];
-            _logpath = ConfigurationManager.AppSettings["logPath"];
             _usernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];
             _fullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"]; 
             _emailMapping = ConfigurationManager.AppSettings["mapToV1Email"]; 
@@ -72,13 +67,12 @@ namespace VersionOne.Provisioning.Tests
             IAPIConnector servicesConnector;
             
             //Added to work with a proxy
-            if(!String.IsNullOrEmpty(_proxyServerUri))
+            if (!String.IsNullOrEmpty(_proxyServerUri))
             {
-                metaConnector = new V1APIConnector(_V1Instance + @"meta.v1/", _proxyServerUri,_proxyUsername,
-                                                                                                _proxyPassword, _proxyDomain);
-                servicesConnector = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password,
-                                                                                        false, _proxyServerUri, _proxyUsername,
-                                                                                                    _proxyPassword, _proxyDomain);
+                WebProxyBuilder proxyBuilder = new WebProxyBuilder();
+                WebProxy webProxy = proxyBuilder.Build(_proxyServerUri, _proxyUsername, _proxyPassword, _proxyDomain);
+                metaConnector = new V1APIConnector(_V1Instance + @"meta.v1/", webProxy);
+                servicesConnector = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password, false, webProxy);
             }
             else
             {
@@ -100,7 +94,7 @@ namespace VersionOne.Provisioning.Tests
             manager.UseDefaultLDAPCredentials = _useDefaultLDAPCredentials;
 
             usernameAttribute = model.GetAttributeDefinition(V1Constants.USERNAME);
-            isInactiveAttribute = model.GetAttributeDefinition(V1Constants.ISINACTIVE);
+            model.GetAttributeDefinition(V1Constants.ISINACTIVE);
 
             //IAssetType memberType = model.GetAssetType(V1Constants.MEMBER);
             //isInactiveAttribute = memberType.GetAttributeDefinition("IsInactive");
