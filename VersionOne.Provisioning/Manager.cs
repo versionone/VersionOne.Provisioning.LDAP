@@ -15,9 +15,9 @@ namespace VersionOne.Provisioning
 {
     public class Manager
     {
-        private IServices _services;
-        private IMetaModel _model;
-        private string _defaultRole;
+        private readonly IServices _services;
+        private readonly IMetaModel _model;
+        private readonly string _defaultRole;
         public List<User> _deactivatedMembers;
         public List<User> _newMembers;
         private string _usernameMapping;
@@ -26,8 +26,9 @@ namespace VersionOne.Provisioning
         private string _nicknameMapping;
         private bool _useDefaultLDAPCredentials;
         
-        private static Logger logger = LogManager.GetCurrentClassLogger();
-        private SmtpAdaptor smtpAdaptor;
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly SmtpAdaptor smtpAdaptor;
+        private string _groupMemberAttribute;
 
         public Manager(IServices services, IMetaModel model, string defaultRole, SmtpAdaptor smtpAdaptor)
         {
@@ -69,6 +70,12 @@ namespace VersionOne.Provisioning
             set { _useDefaultLDAPCredentials = value; }
         }
 
+        public string GroupMemberAttribute
+        {
+            get { return _groupMemberAttribute; }
+            set { _groupMemberAttribute = value; }
+        }
+
         public IList<User> GetVersionOneUsers()
         {
             IAssetType memberType = _model.GetAssetType(V1Constants.MEMBER);
@@ -96,11 +103,11 @@ namespace VersionOne.Provisioning
             IList<User> ldapUsers = new List<User>();
             try
             {
-                LDAPReader ldapReader = new LDAPReader();
+                LDAPReader ldapReader = new LDAPReader(serverpath, _groupMemberAttribute, username, pwd, _usernameMapping, _fullnameMapping, _emailMapping, _nicknameMapping, _useDefaultLDAPCredentials);
 
-                IList<LDAPUser> ldapUserInfo = ldapReader.GetUsersFromLdap(serverpath, groupDN, username, pwd, _usernameMapping, _fullnameMapping, _emailMapping, _nicknameMapping, _useDefaultLDAPCredentials);
+                IList<LDAPUser> ldapUserInfo = ldapReader.GetUsersFromLdap(groupDN);
 
-                logger.Info(ldapUserInfo.Count + " LDAP members successfully retrieved from " + groupDN);
+                logger.Info(ldapUserInfo.Count + " LDAP members retrieved from " + groupDN);
 
                 //Get the Ldapuser data into a Provisioning.User collection.
                 foreach (LDAPUser ldapUser in ldapUserInfo)
@@ -248,7 +255,7 @@ namespace VersionOne.Provisioning
 
             if (addedUsers.Count > 0 || deactivatedUsers.Count > 0 || reactivatedUsers.Count > 0)
             {
-                smtpAdaptor.SendAdminNotification(addedUsers, deactivatedUsers, reactivatedUsers);
+                smtpAdaptor.SendAdminNotification(addedUsers, reactivatedUsers, deactivatedUsers);
             }
         }
 

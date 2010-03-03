@@ -30,7 +30,7 @@ namespace VersionOne.Provisioning.Console
                 {
                     manager.UseDefaultLDAPCredentials = true;
                 }
-
+                manager.GroupMemberAttribute = ConfigurationManager.AppSettings["ldapGroupMemberAttribute"];
                 manager.UsernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];
                 manager.FullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"];
                 manager.EmailMapping = ConfigurationManager.AppSettings["mapToV1Email"];
@@ -77,31 +77,41 @@ namespace VersionOne.Provisioning.Console
             IMetaModel metaModel = new MetaModel(metaConn);
             IServices services = new Services(metaModel, dataConn);
             UserNotificationEmail userNotificationEmail = new UserNotificationEmail
-                                                              {
-                                                                  AdminEmail =
-                                                                      ConfigurationManager.AppSettings["adminEmail"],
-                                                                  AdminFullName =
-                                                                      ConfigurationManager.AppSettings["adminFullName"],
-                                                                  Body =
-                                                                      ReadFile(
-                                                                      ConfigurationManager.AppSettings["userNotificationEmailBodyFilename"]),
-                                                                  Subject =
-                                                                      ConfigurationManager.AppSettings["userNotificationEmailSubject"],
-                                                                  VersionOneUrl =
-                                                                      ConfigurationManager.AppSettings["V1Instance"]
-                                                              };
+              {
+                  AdminEmail =
+                      ConfigurationManager.AppSettings["adminEmail"],
+                  AdminFullName =
+                      ConfigurationManager.AppSettings["adminFullName"],
+                  Body =
+                      Utils.ReadFile(
+                      ConfigurationManager.AppSettings["userNotificationEmailBodyFilename"]),
+                  Subject =
+                      ConfigurationManager.AppSettings["userNotificationEmailSubject"],
+                  VersionOneUrl =
+                      ConfigurationManager.AppSettings["V1Instance"]
+              };
             AdminNotificationEmail adminNotificationEmail = new AdminNotificationEmail
-                                                                {
-                                                                    AdminEmail =
-                                                                        ConfigurationManager.AppSettings["adminEmail"],
-                                                                    Body =
-                                                                        ReadFile(
-                                                                        ConfigurationManager.AppSettings["adminNotificationEmailBodyFilename"]),
-                                                                    Subject =
-                                                                        ConfigurationManager.AppSettings["adminNotificationEmailSubject"],
-                                                                    VersionOneUrl =
-                                                                        ConfigurationManager.AppSettings["V1Instance"]
-                                                                };
+            {
+                AdminEmail =
+                    ConfigurationManager.AppSettings["adminEmail"],
+                BodyTemplate =
+                    Utils.ReadFile(
+                    ConfigurationManager.AppSettings["adminNotificationEmailBodyTemplateFilename"]),
+                AddedUsersSection =
+                    Utils.ReadFile(
+                    ConfigurationManager.AppSettings["adminNotificationEmailBodyNewUsersFilename"]),
+                ReactivatedUsersSection =
+                    Utils.ReadFile(
+                    ConfigurationManager.AppSettings["adminNotificationEmailBodyReactivatedUsersFilename"]),
+                DeactivatedUsersSection =
+                    Utils.ReadFile(
+                    ConfigurationManager.AppSettings["adminNotificationEmailBodyDeactivatedUsersFilename"]),
+                Subject =
+                    ConfigurationManager.AppSettings["adminNotificationEmailSubject"],
+                VersionOneUrl =
+                    ConfigurationManager.AppSettings["V1Instance"]
+            };
+
             SmtpClient smtpClient = new SmtpClient();
             smtpClient.EnableSsl = bool.Parse(ConfigurationManager.AppSettings["smtpEnableSSL"]);
             SmtpAdaptor smtpAdaptor = new SmtpAdaptor(userNotificationEmail, adminNotificationEmail, smtpClient);
@@ -109,14 +119,6 @@ namespace VersionOne.Provisioning.Console
             return new Manager(services, metaModel, ConfigurationManager.AppSettings["V1UserDefaultRole"], smtpAdaptor);
         }
 
-        private static string ReadFile(string filename)
-        {
-            string s = "";
-            using (StreamReader rdr = File.OpenText(filename))
-            {
-                s = rdr.ReadToEnd();
-            }
-            return s;
-        }
+        
     }
 }

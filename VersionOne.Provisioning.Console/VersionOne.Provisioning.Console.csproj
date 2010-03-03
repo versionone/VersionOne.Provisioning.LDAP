@@ -12,6 +12,7 @@
     <AssemblyName>VersionOne.Provisioning.Console</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <StartupObject>VersionOne.Provisioning.Console.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -59,14 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="userNotificationEmail.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="adminNotificationEmail.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="GABEApp.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\VersionOne.Provisioning.LDAP\VersionOne.Provisioning.LDAP.csproj">

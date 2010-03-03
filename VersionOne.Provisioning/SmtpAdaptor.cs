@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
@@ -30,24 +31,12 @@ namespace VersionOne.Provisioning
 
         public void SendUserNotification(string username, string password, string to)
         {
-            string body = string.Format(userEmail.Body, userEmail.Subject, userEmail.VersionOneUrl, username, password,
-                                        userEmail.AdminFullName, userEmail.AdminEmail);
-            MailMessage message = new MailMessage(userEmail.AdminEmail, to, userEmail.Subject, body) { IsBodyHtml = true };
-            Send(message);
+            Send(userEmail.CreateMessage(username, password, to));
         }
 
-        public void SendAdminNotification(StringCollection addedUsernames, StringCollection deactivatedUsernames, StringCollection reactivatedUsernames)
+        public void SendAdminNotification(StringCollection addedUsernames, StringCollection reactivatedUsernames, StringCollection deactivatedUsernames)
         {
-            string body = string.Format(adminEmail.Body, adminEmail.Subject, userEmail.VersionOneUrl, GetCommaDelimitedList(addedUsernames), GetCommaDelimitedList(deactivatedUsernames), GetCommaDelimitedList(reactivatedUsernames));
-            MailMessage message = new MailMessage(adminEmail.AdminEmail, adminEmail.AdminEmail, adminEmail.Subject, body) { IsBodyHtml = true };
-            Send(message);
-        }
-
-        private static string GetCommaDelimitedList(StringCollection strings)
-        {
-            string[] stringArray = new string[strings.Count];
-            strings.CopyTo(stringArray, 0);
-            return string.Join(", ", stringArray);
+            Send(adminEmail.CreateMessage(addedUsernames,reactivatedUsernames,deactivatedUsernames));
         }
 
         private void Send(MailMessage message)
@@ -64,13 +53,41 @@ namespace VersionOne.Provisioning
         public string AdminEmail { get; set; }
         public string AdminFullName { get; set; }
         public string VersionOneUrl { get; set; }
+
+        public MailMessage CreateMessage(string username, string password, string to)
+        {
+            string body = string.Format(Body, Subject, VersionOneUrl, username, password, AdminFullName, AdminEmail);
+            return new MailMessage(AdminEmail, to, Subject, body) { IsBodyHtml = true };
+        }
     }
 
     public class AdminNotificationEmail
     {
         public string Subject { get; set; }
-        public string Body { get; set; }
+        public string BodyTemplate { get; set; }
         public string AdminEmail { get; set; }
         public string VersionOneUrl { get; set; }
+        public string AddedUsersSection { get; set; }
+        public string ReactivatedUsersSection { get; set; }
+        public string DeactivatedUsersSection { get; set; }
+
+        public MailMessage CreateMessage(StringCollection addedUsernames, StringCollection reactivatedUsernames, StringCollection deactivatedUsernames)
+        {
+            string template = string.Format(BodyTemplate, Subject, VersionOneUrl, GetSection(addedUsernames, AddedUsersSection), GetSection(reactivatedUsernames, ReactivatedUsersSection), GetSection(deactivatedUsernames, DeactivatedUsersSection));
+            string body = GetBody(addedUsernames, reactivatedUsernames, deactivatedUsernames, template);
+            return new MailMessage(AdminEmail, AdminEmail, Subject, body) { IsBodyHtml = true };
+        }
+
+        private string GetBody(StringCollection addedUsernames, StringCollection reactivatedUsernames, StringCollection deactivatedUsernames, string template)
+        {
+            string body = template.Replace("<!--added-->", Utils.GetCommaDelimitedList(addedUsernames));
+            body = body.Replace("<!--reactivated-->", Utils.GetCommaDelimitedList(reactivatedUsernames));
+            return body.Replace("<!--deactivated-->", Utils.GetCommaDelimitedList(deactivatedUsernames));
+        }
+
+        private static string GetSection(ICollection usernames, string section)
+        {
+            return (usernames.Count > 0) ? section : "";
+        }
     }
 }

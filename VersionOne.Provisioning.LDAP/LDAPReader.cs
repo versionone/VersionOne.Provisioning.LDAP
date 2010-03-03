@@ -1,76 +1,165 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.DirectoryServices;
+using NLog;
 
 namespace VersionOne.Provisioning.LDAP
 {
     public class LDAPReader
     {
-        public IList<LDAPUser> GetUsersFromLdap(string serverpath, string groupDN, string username, string pwd, string mapUsername, string mapFullname, string mapEmail, string mapNickname, bool useDefaultCredentials)
+        private readonly string groupMemberAttribute;
+        private readonly string username;
+        private readonly string password;
+        private readonly string mapUsername;
+        private readonly string mapFullname;
+        private readonly string mapEmail;
+        private readonly string mapNickname;
+        private readonly bool useDefaultCredentials;
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly string root;
+
+        public LDAPReader(string serverpath, string groupMemberAttribute, string username, string password, string mapUsername, string mapFullname, string mapEmail, string mapNickname, bool useDefaultCredentials)
         {
-            string serverPath = serverpath;
-            string grpDN = groupDN;
-            string userName = username;
-            string password = pwd;
-            string root = @"LDAP://" + serverPath + @"/";
-            string fullPath = root + grpDN;
-            DirectoryEntry group;
+            root = @"LDAP://" + serverpath + @"/";
+            this.groupMemberAttribute = groupMemberAttribute;
+            this.username = username;
+            this.password = password;
+            this.mapUsername = mapUsername;
+            this.mapFullname = mapFullname;
+            this.mapEmail = mapEmail;
+            this.mapNickname = mapNickname;
+            this.useDefaultCredentials = useDefaultCredentials;
+        }
+
+        public IList<LDAPUser> GetUsersFromLdap(string groupDN)
+        {
+
+            string fullPath = root + groupDN;
 
             IList<LDAPUser> ldapUsersList = new List<LDAPUser>();
-            
-            
-            if (useDefaultCredentials)
-            {
-                group = new DirectoryEntry(fullPath);
-            }
-            else
-            {
-                group = new DirectoryEntry(fullPath,userName,password);
-            }
-            
-            PropertyValueCollection memberPaths = group.Properties["member"];
+
+
+            DirectoryEntry group = GetDirectoryEntry(fullPath, new [] {groupMemberAttribute});
+            PropertyValueCollection memberPaths = GetMemberPaths(group);
 
             foreach (string memberPath in memberPaths)
             {
-                LDAPUser user = new LDAPUser();
-                var member = new DirectoryEntry(root + memberPath);
-                user.Username = member.InvokeGet(mapUsername).ToString(); //username
-                user.FullName = member.InvokeGet(mapFullname).ToString(); //fullname
-                user.Email = member.InvokeGet(mapEmail).ToString(); //email
-                user.Nickname = member.InvokeGet(mapNickname).ToString(); //nickname
-                ldapUsersList.Add(user);
-            }
-
-            return ldapUsersList;
-            /*
-                
-                //Connect to the LDAP store. (For local testing with VPN connected, works without explicitly passing in username & password) 
-                DirectoryEntry group = new DirectoryEntry(fullPath);
-                //DirectoryEntry group = new DirectoryEntry(fullPath, username, password);
-
-                //Get the users in the group.
-                DirectorySearcher ldapSearcher = new DirectorySearcher(group)
-                                                      {
-                                                          Filter = (string.Format("(objectClass={0})", "user"))
-                                                      };
-
-                //Put the Ldap users into a "non-LDAP-aware" collection. 
-                foreach (SearchResult ldapUser in ldapSearcher.FindAll())
+                try
                 {
-                    DirectoryEntry de = ldapUser.GetDirectoryEntry();
                     LDAPUser user = new LDAPUser();
-
-                    user.Username = de.Properties["userPrincipalName"].Value.ToString(); //username
-                    user.FullName = de.Properties["name"].Value.ToString(); //fullname
-                    user.Email = de.Properties["mail"].Value.ToString(); //email
-                    user.Nickname = de.Properties["sAMAccountName"].Value.ToString(); //nickname
-
+                    DirectoryEntry member = GetMember(memberPath);
+                    SetUsername(user, member);
+                    SetFullName(user, member);
+                    SetEmail(user, member);
+                    SetNickname(user, member);
                     ldapUsersList.Add(user);
+                } catch(Exception ex)
+                {
+                    logger.ErrorException("Unable to read member from ldap, path: " + memberPath, ex);
                 }
-
-                return ldapUsersList;*/
+            }
+            if(memberPaths.Count < 1)
+            {
+                logger.Warn("No members were returned from group: " + fullPath + ", group member attribute name: '" + groupMemberAttribute);
+            }
+            return ldapUsersList;
         }
+
+        private DirectoryEntry GetDirectoryEntry(string fullPath, string[] propertiesToLoad)
+        {
+            try
+            {
+                DirectoryEntry entry;
+                if (useDefaultCredentials)
+                {
+                    entry = new DirectoryEntry(fullPath);
+                }
+                else
+                {
+                    entry = new DirectoryEntry(fullPath, username, password);
+                }
+                entry.AuthenticationType = AuthenticationTypes.ServerBind;
+                entry.RefreshCache(propertiesToLoad);
+                return entry;
+            } catch(Exception ex)
+            {
+                logger.ErrorException("Unable access ldap, path: " + fullPath + "', username: '" + username + "', use default credentials: '" + useDefaultCredentials + "'", ex);
+                throw;
+            }
+        }
+
+        private void SetNickname(LDAPUser user, DirectoryEntry member)
+        {
+            try{
+            user.Nickname = member.Properties[mapNickname][0].ToString(); //nickname
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorException("Unable to get nickname property for member: " + member.Path + ", nickname property name: " + mapNickname, ex);
+                throw;
+            }
+        }
+
+        private void SetEmail(LDAPUser user, DirectoryEntry member)
+        {
+            try
+            {
+                user.Email = member.Properties[mapEmail][0].ToString(); //email
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorException("Unable to get email property for member: " + member.Path + ", email property name: " + mapEmail, ex);
+                throw;
+            }
+        }
+
+        private void SetFullName(LDAPUser user, DirectoryEntry member)
+        {
+            try{
+            user.FullName = member.Properties[mapFullname][0].ToString(); //fullname
+            }
+            catch (Exception ex)
+            {
+                logger.ErrorException("Unable to get fullname property for member: " + member.Path + ", fullname property name: " + mapFullname, ex);
+                throw;
+            }
+        }
+
+        private void SetUsername(LDAPUser user, DirectoryEntry member)
+        {
+            try
+            {
+                user.Username = member.Properties[mapUsername][0].ToString(); //username
+            } catch(Exception ex)
+            {
+                logger.ErrorException("Unable to get username property for member: " + member.Path + ", username property name: " + mapUsername, ex);
+                throw;
+            }
+        }
+
+        private DirectoryEntry GetMember(string memberPath)
+        {
+            try
+            {
+                return GetDirectoryEntry(root + memberPath, new [] {mapUsername, mapFullname, mapEmail, mapNickname});
+            }catch(Exception ex)
+            {
+                logger.ErrorException("Unable to get directory entry for member, path: " + root + memberPath + ", username: " + username, ex);
+                throw;
+            }
+        }
+
+        private PropertyValueCollection GetMemberPaths(DirectoryEntry group)
+        {
+            try
+            {
+                return group.Properties[groupMemberAttribute];
+            }catch(Exception ex)
+            {
+                logger.ErrorException("Unable to get group member property for group: " + group.Path + ", group member property name: " + groupMemberAttribute, ex);
+                throw;
+            }
+        }
+
     }
 }

@@ -15,7 +15,8 @@ namespace VersionOne.Provisioning.LDAP.Tests
         private string _ldapUsername;
         private string _ldapPassword;
         private bool _useDefaultLDAPCredentials;
-        
+        private string _ldapGroupMemberAttribute;
+
         [SetUp]      
         public void SetUp()
         {
@@ -23,6 +24,7 @@ namespace VersionOne.Provisioning.LDAP.Tests
             _ldapGroupDN = ConfigurationManager.AppSettings["ldapGroupDN"];
             _ldapUsername = ConfigurationManager.AppSettings["ldapUsername"];
             _ldapPassword = ConfigurationManager.AppSettings["ldapPassword"];
+            _ldapGroupMemberAttribute = ConfigurationManager.AppSettings["ldapGroupMemberAttribute"];
 
             if (ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
             {
@@ -33,12 +35,10 @@ namespace VersionOne.Provisioning.LDAP.Tests
         [Test]
         public void TestGetUsersFromLdap()
         {
-            LDAPReader ldapReader = new LDAPReader();
+            LDAPReader ldapReader = new LDAPReader(_ldapServerPath, _ldapGroupMemberAttribute, _ldapUsername, _ldapPassword, ConfigurationManager.AppSettings["mapToV1Username"], ConfigurationManager.AppSettings["mapToV1Fullname"], ConfigurationManager.AppSettings["mapToV1Email"], ConfigurationManager.AppSettings["mapToV1Nickname"], _useDefaultLDAPCredentials);
             IList<LDAPUser> ldapUsers = new List<LDAPUser>();
 
-          //  ldapUsers = ldapReader.GetUsersFromLdap("192.168.36.4", "OU=Sales,OU=Users V1,DC=corp,DC=versionone,DC=net","","");
-
-            ldapUsers = ldapReader.GetUsersFromLdap(_ldapServerPath, _ldapGroupDN, _ldapUsername, _ldapPassword, ConfigurationManager.AppSettings["mapToV1Username"], ConfigurationManager.AppSettings["mapToV1Fullname"], ConfigurationManager.AppSettings["mapToV1Email"], ConfigurationManager.AppSettings["mapToV1Nickname"], _useDefaultLDAPCredentials);
+            ldapUsers = ldapReader.GetUsersFromLdap(_ldapGroupDN);
              
             
             Assert.AreEqual(2,ldapUsers.Count);
