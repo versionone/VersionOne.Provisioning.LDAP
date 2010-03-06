@@ -23,7 +23,7 @@ namespace VersionOne.Provisioning.Console
             {
                 Manager manager = CreateManager();
                 IDictionary<string, User> v1Users = manager.GetVersionOneUsers();
-                IDictionary<string, User> ldapUsers = manager.GetDirectoryUsers(ConfigurationManager.AppSettings["ldapGroupDN"]);
+                IDictionary<string, User> ldapUsers = manager.GetDirectoryUsers();
                 IList<User> actionUsers = manager.CompareUsers(ldapUsers, v1Users);
                 manager.UpdateVersionOne(actionUsers);
            }
@@ -39,22 +39,9 @@ namespace VersionOne.Provisioning.Console
         {
             V1Instance v1 = Factory.GetV1Instance();
             SmtpAdaptor smtpAdaptor = Factory.GetSmtpAdaptor();
-            IUserDirectoryReader ldapReader = GetLdapReader();
+            IUserDirectoryReader ldapReader = new LDAPReader();
+            ldapReader.Initialize(ConfigurationManager.AppSettings);
             return new Manager(v1, smtpAdaptor, ldapReader);
-        }
-
-        public static IUserDirectoryReader GetLdapReader()
-        {
-            bool useDefaultLDAPCredentials = false;
-            if (ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
-            {
-                useDefaultLDAPCredentials = true;
-            }
-            return new LDAPReader(ConfigurationManager.AppSettings["ldapServerPath"], 
-                                  ConfigurationManager.AppSettings["ldapGroupMemberAttribute"], ConfigurationManager.AppSettings["ldapUsername"], 
-                                  ConfigurationManager.AppSettings["ldapPasswword"], ConfigurationManager.AppSettings["mapToV1Username"],
-                                  ConfigurationManager.AppSettings["mapToV1Fullname"], ConfigurationManager.AppSettings["mapToV1Email"], 
-                                  ConfigurationManager.AppSettings["mapToV1Nickname"], useDefaultLDAPCredentials);
         }
     }
 }

@@ -47,14 +47,14 @@ namespace VersionOne.Provisioning
             return v1UserList;
         }
 
-        public IDictionary<string, User> GetDirectoryUsers(string userPath)
+        public IDictionary<string, User> GetDirectoryUsers()
         {
             IDictionary<string, User> users = new Dictionary<string, User>();
             try
             {
-                IList<DirectoryUser> directoryUsers = _directoryReader.GetUsers(userPath);
+                IList<DirectoryUser> directoryUsers = _directoryReader.GetUsers();
 
-                logger.Info(directoryUsers.Count + " directory members retrieved from " + userPath);
+                logger.Info(directoryUsers.Count + " directory members retrieved.");
 
                 //Get the Ldapuser data into a Provisioning.User collection.
                 foreach (DirectoryUser directoryUser in directoryUsers)
@@ -79,7 +79,7 @@ namespace VersionOne.Provisioning
             }
             catch (Exception ex)
             {
-                logger.ErrorException("Error retrieving users from Directory: Path = " + userPath, ex);
+                logger.ErrorException("Error retrieving users from Directory", ex);
                 throw;
             }
             return users;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.DirectoryServices;
 using NLog;
 using VersionOne.Provisioning;
@@ -8,38 +9,40 @@ namespace VersionOne.Provisioning.LDAP
 {
     public class LDAPReader : IUserDirectoryReader
     {
-        private readonly string groupMemberAttribute;
-        private readonly string username;
-        private readonly string password;
-        private readonly string mapUsername;
-        private readonly string mapFullname;
-        private readonly string mapEmail;
-        private readonly string mapNickname;
-        private readonly bool useDefaultCredentials;
+        private string groupMemberAttribute;
+        private string username;
+        private string password;
+        private string mapUsername;
+        private string mapFullname;
+        private string mapEmail;
+        private string mapNickname;
+        private bool useDefaultCredentials;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-        private readonly string root;
+        private string root;
+        private string groupDN;
+        private string fullPath;
 
-        public LDAPReader(string serverpath, string groupMemberAttribute, string username, string password, string mapUsername, string mapFullname, string mapEmail, string mapNickname, bool useDefaultCredentials)
+        public void Initialize(NameValueCollection appSettings)
         {
-            root = @"LDAP://" + serverpath + @"/";
-            this.groupMemberAttribute = groupMemberAttribute;
-            this.username = username;
-            this.password = password;
-            this.mapUsername = mapUsername;
-            this.mapFullname = mapFullname;
-            this.mapEmail = mapEmail;
-            this.mapNickname = mapNickname;
-            this.useDefaultCredentials = useDefaultCredentials;
+            if (appSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
+            {
+                useDefaultCredentials = true;
+            }
+            root = @"LDAP://" + appSettings["ldapServerPath"] + @"/";
+            groupMemberAttribute = appSettings["ldapGroupMemberAttribute"];
+            username = appSettings["ldapUsername"];
+            password = appSettings["ldapPassword"];
+            mapUsername = appSettings["mapToV1Username"];
+            mapFullname = appSettings["mapToV1Fullname"];
+            mapEmail = appSettings["mapToV1Email"];
+            mapNickname = appSettings["mapToV1Nickname"];
+            groupDN = appSettings["ldapGroupDN"];
+            fullPath = root + groupDN;
         }
 
-        public IList<DirectoryUser> GetUsers(string userPath)
+        public IList<DirectoryUser> GetUsers()
         {
-
-            string fullPath = root + userPath;
-
             IList<DirectoryUser> ldapUsersList = new List<DirectoryUser>();
-
-
             DirectoryEntry group = GetDirectoryEntry(fullPath, new [] {groupMemberAttribute});
             PropertyValueCollection memberPaths = GetMemberPaths(group);
 

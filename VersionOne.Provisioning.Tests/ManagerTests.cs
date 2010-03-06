@@ -25,7 +25,7 @@ namespace VersionOne.Provisioning.Tests
         [Test]
         public void TestBuildLDAPUsersList()
         {
-            IDictionary<string, User> ldapUsersList = manager.GetDirectoryUsers("userpath");
+            IDictionary<string, User> ldapUsersList = manager.GetDirectoryUsers();
             Assert.AreEqual(2, ldapUsersList.Count);
             
         }
@@ -207,12 +207,17 @@ public class TestUserFactory
 public class DirectoryReaderStub : IUserDirectoryReader
 {
 
-    public IList<DirectoryUser> GetUsers(string userPath)
+    public IList<DirectoryUser> GetUsers()
     {
         IList<DirectoryUser> users = new List<DirectoryUser>();
         users.Add(CreateTestUser("superman"));
         users.Add(CreateTestUser("spiderman"));
         return users;
+    }
+
+    public void Initialize(NameValueCollection appSettings)
+    {
+        throw new System.NotImplementedException();
     }
 
     private DirectoryUser CreateTestUser(string username)
