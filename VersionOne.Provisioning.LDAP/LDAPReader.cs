@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.DirectoryServices;
 using NLog;
+using VersionOne.Provisioning;
 
 namespace VersionOne.Provisioning.LDAP
 {
-    public class LDAPReader
+    public class LDAPReader : IUserDirectoryReader
     {
         private readonly string groupMemberAttribute;
         private readonly string username;
@@ -31,12 +32,12 @@ namespace VersionOne.Provisioning.LDAP
             this.useDefaultCredentials = useDefaultCredentials;
         }
 
-        public IList<LDAPUser> GetUsersFromLdap(string groupDN)
+        public IList<DirectoryUser> GetUsers(string userPath)
         {
 
-            string fullPath = root + groupDN;
+            string fullPath = root + userPath;
 
-            IList<LDAPUser> ldapUsersList = new List<LDAPUser>();
+            IList<DirectoryUser> ldapUsersList = new List<DirectoryUser>();
 
 
             DirectoryEntry group = GetDirectoryEntry(fullPath, new [] {groupMemberAttribute});
@@ -46,7 +47,7 @@ namespace VersionOne.Provisioning.LDAP
             {
                 try
                 {
-                    LDAPUser user = new LDAPUser();
+                    DirectoryUser user = new DirectoryUser();
                     DirectoryEntry member = GetMember(memberPath);
                     SetUsername(user, member);
                     SetFullName(user, member);
@@ -88,7 +89,7 @@ namespace VersionOne.Provisioning.LDAP
             }
         }
 
-        private void SetNickname(LDAPUser user, DirectoryEntry member)
+        private void SetNickname(DirectoryUser user, DirectoryEntry member)
         {
             try{
             user.Nickname = member.Properties[mapNickname][0].ToString(); //nickname
@@ -100,7 +101,7 @@ namespace VersionOne.Provisioning.LDAP
             }
         }
 
-        private void SetEmail(LDAPUser user, DirectoryEntry member)
+        private void SetEmail(DirectoryUser user, DirectoryEntry member)
         {
             try
             {
@@ -113,7 +114,7 @@ namespace VersionOne.Provisioning.LDAP
             }
         }
 
-        private void SetFullName(LDAPUser user, DirectoryEntry member)
+        private void SetFullName(DirectoryUser user, DirectoryEntry member)
         {
             try{
             user.FullName = member.Properties[mapFullname][0].ToString(); //fullname
@@ -125,7 +126,7 @@ namespace VersionOne.Provisioning.LDAP
             }
         }
 
-        private void SetUsername(LDAPUser user, DirectoryEntry member)
+        private void SetUsername(DirectoryUser user, DirectoryEntry member)
         {
             try
             {

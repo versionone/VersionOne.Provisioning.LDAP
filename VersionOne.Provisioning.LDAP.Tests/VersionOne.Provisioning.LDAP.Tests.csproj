@@ -58,6 +58,10 @@
       <Project>{D347843E-F5DE-42BB-9D5D-86237495ECBD}</Project>
       <Name>VersionOne.Provisioning.LDAP</Name>
     </ProjectReference>
+    <ProjectReference Include="..\VersionOne.Provisioning\VersionOne.Provisioning.csproj">
+      <Project>{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}</Project>
+      <Name>VersionOne.Provisioning</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

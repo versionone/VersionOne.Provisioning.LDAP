@@ -9,7 +9,13 @@ using NLog;
 
 namespace VersionOne.Provisioning
 {
-    public class SmtpAdaptor
+    public interface ISmtpAdaptor
+    {
+        void SendUserNotification(string username, string password, string to);
+        void SendAdminNotification(StringCollection addedUsernames, StringCollection reactivatedUsernames, StringCollection deactivatedUsernames);
+    }
+
+    public class SmtpAdaptor : ISmtpAdaptor
     {
         public AdminNotificationEmail AdminEmail { get; set; }
         private readonly UserNotificationEmail userEmail;

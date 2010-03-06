@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Net.Mail;
-using System.Text;
-using System.IO;
-using System.DirectoryServices;
 using NLog;
 using VersionOne.SDK.APIClient;
-using VersionOne.Provisioning.LDAP;
 
 namespace VersionOne.Provisioning
 {
@@ -18,187 +11,118 @@ namespace VersionOne.Provisioning
         private readonly IServices _services;
         private readonly IMetaModel _model;
         private readonly string _defaultRole;
-        public List<User> _deactivatedMembers;
-        public List<User> _newMembers;
-        private string _usernameMapping;
-        private string _fullnameMapping;
-        private string _emailMapping;
-        private string _nicknameMapping;
-        private bool _useDefaultLDAPCredentials;
-        
+        private readonly IUserDirectoryReader _directoryReader;
+        private readonly ISmtpAdaptor _smtpAdaptor;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-        private readonly SmtpAdaptor smtpAdaptor;
-        private string _groupMemberAttribute;
-
-        public Manager(IServices services, IMetaModel model, string defaultRole, SmtpAdaptor smtpAdaptor)
+        
+        public Manager(V1Instance v1, ISmtpAdaptor smtpAdaptor, IUserDirectoryReader ldapreader)
         {
-            this._services = services;
-            this._model = model;
-            this._defaultRole = defaultRole;
-            this.smtpAdaptor = smtpAdaptor;
-            _deactivatedMembers = new List<User>();
-            _newMembers = new List<User>();
+            _services = v1.Services;
+            _model = v1.Model;
+            _defaultRole = v1.DefaultRole;
+            _smtpAdaptor = smtpAdaptor;
+            _directoryReader = ldapreader;
         }
 
-        public string UsernameMapping
-        {
-            get { return _usernameMapping; }
-            set { _usernameMapping = value;}
-        }
 
-        public string FullnameMapping
-        {
-            get { return _fullnameMapping; }
-            set { _fullnameMapping = value; }
-        }
-
-        public string EmailMapping
-        {
-            get { return _emailMapping; }
-            set { _emailMapping = value; }
-        }
-
-        public string NicknameMapping
-        {
-            get { return _nicknameMapping; }
-            set { _nicknameMapping = value; }
-        }
-
-        public bool UseDefaultLDAPCredentials
-        {
-            get { return _useDefaultLDAPCredentials; }
-            set { _useDefaultLDAPCredentials = value; }
-        }
-
-        public string GroupMemberAttribute
-        {
-            get { return _groupMemberAttribute; }
-            set { _groupMemberAttribute = value; }
-        }
-
-        public IList<User> GetVersionOneUsers()
+        public IDictionary<string, User> GetVersionOneUsers()
         {
             IAssetType memberType = _model.GetAssetType(V1Constants.MEMBER);
             Query userQuery = new Query(memberType);
 
             IAttributeDefinition username = _model.GetAttributeDefinition(V1Constants.USERNAME);
-            IAttributeDefinition isInactive = memberType.GetAttributeDefinition("IsInactive");
-            IAttributeDefinition ckInactivate = memberType.GetAttributeDefinition("CheckInactivate");
-            
+            IAttributeDefinition isInactive = _model.GetAttributeDefinition(V1Constants.ISINACTIVE);
+            IAttributeDefinition ckInactivate = _model.GetAttributeDefinition(V1Constants.CHECKINACTIVATE);
+
             userQuery.Selection.Add(username);
             userQuery.Selection.Add(isInactive);
             userQuery.Selection.Add(ckInactivate);
             QueryResult result = _services.Retrieve(userQuery);
 
-            IList<User> v1UserList = new List<User>();
-            v1UserList = BuildV1UsersList(result.Assets);
+            IDictionary<string, User> v1UserList = BuildV1UsersList(result.Assets);
 
-            logger.Info(v1UserList.Count + " users successfully retrieved from VersionOne.");//[count] users successfully retrieved from V1...
+            logger.Info(v1UserList.Count + " users successfully retrieved from VersionOne.");
+                //[count] users successfully retrieved from V1...
 
             return v1UserList;
         }
 
-        public IList<User> BuildLdapUsersList(string serverpath, string groupDN, string username, string pwd)
+        public IDictionary<string, User> GetDirectoryUsers(string userPath)
         {
-            IList<User> ldapUsers = new List<User>();
+            IDictionary<string, User> users = new Dictionary<string, User>();
             try
             {
-                LDAPReader ldapReader = new LDAPReader(serverpath, _groupMemberAttribute, username, pwd, _usernameMapping, _fullnameMapping, _emailMapping, _nicknameMapping, _useDefaultLDAPCredentials);
+                IList<DirectoryUser> directoryUsers = _directoryReader.GetUsers(userPath);
 
-                IList<LDAPUser> ldapUserInfo = ldapReader.GetUsersFromLdap(groupDN);
-
-                logger.Info(ldapUserInfo.Count + " LDAP members retrieved from " + groupDN);
+                logger.Info(directoryUsers.Count + " directory members retrieved from " + userPath);
 
                 //Get the Ldapuser data into a Provisioning.User collection.
-                foreach (LDAPUser ldapUser in ldapUserInfo)
+                foreach (DirectoryUser directoryUser in directoryUsers)
                 {
-                    User user = new User();
-                    user.Username = ldapUser.Username;
-                    user.FullName = ldapUser.FullName;
-                    user.Email = ldapUser.Email;
-                    user.Nickname = ldapUser.Nickname;
-                    ldapUsers.Add(user);
+                    if (!users.ContainsKey(directoryUser.Username))
+                    {
+                        User user = new User();
+                        user.Username = directoryUser.Username;
+                        user.FullName = directoryUser.FullName;
+                        user.Email = directoryUser.Email;
+                        user.Nickname = directoryUser.Nickname;
+                        users.Add(user.Username, user);
 
-                    logger.Debug("LDAP member retrieved: " + user.Username);
+                        logger.Debug("Member retrieved from directory: " + user.Username);
+                    }
+                    else
+                    {
+                        logger.Error("Duplicate username found in directory: " + directoryUser.Username +
+                                     "; ignoring user with duplicate username.");
+                    }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                logger.ErrorException("Error retrieving users from LDAP: Server path = " + serverpath + "; Group DN = " + groupDN +"; Username = " + username,ex);
-                throw ex;
+                logger.ErrorException("Error retrieving users from Directory: Path = " + userPath, ex);
+                throw;
             }
-            return ldapUsers;
+            return users;
         }
 
-        public IList<User> CompareUsers(IList<User> ldapUsers, IList<User> versionOneUsers)
+        public IList<User> CompareUsers(IDictionary<string, User> directoryUsers,
+                                        IDictionary<string, User> versionOneUsers)
         {
-            //The "action" List that will be returned 
-            List<User> v1ActionList = new List<User>(); 
-            
-            ////Get V1 users out of the V1 AssetList and into a User list.
-            //IList<User> v1Usernames = BuildV1UsersList(versionOneUsers);
+            List<User> v1ActionList = new List<User>();
 
-            /*
-            Look for username matches between the Ldap and V1 User lists.
-              - A. If a username in the LDAP List is not in the V1 List, add it to the action List for creation in V1.
-              - B. If a username is in both LDAP and V1, 
-                    1. If the V1 user is active, no action is required.  
-                    2. If the V1 user is inactive, then add it to the action list to reactivate in V1.
-              - C. If a username is in the V1 list but not in the LDAP list,
-                    1. If the V1 user is inactive, no action is required.
-                    2. If the V1 user is active, deactivate it.
-            */
-
-            bool LdapUserFoundInV1;
-            bool V1UserFoundInLDAP;
             int countUsersToCreate = 0;
             int countUsersToReactivate = 0;
             int countUsersToDeactivate = 0;
-            
-            //Look for a match using Ldap as the master list...
-            foreach (User userInLdap in ldapUsers)
-            {
-                LdapUserFoundInV1 = false;
 
-                foreach (User userInV1 in versionOneUsers)
+            //Look for a match using directory as the master list...
+            foreach (User directoryUser in directoryUsers.Values)
+            {
+                if (versionOneUsers.ContainsKey(directoryUser.Username))
                 {
-                    if (userInLdap.Username == userInV1.Username)
+                    User userInV1 = versionOneUsers[directoryUser.Username];
+                    if (userInV1.IsInactive)
                     {
-                        LdapUserFoundInV1 = true;
-                        if (userInV1.IsInactive)
-                        {
-                            //This LDAP user is in V1, but is inactive,
-                            //so it needs to be reactivated in V1.
-                            userInV1.Reactivate = true;
-                            userInV1.Email = userInLdap.Email;
-                            v1ActionList.Add(userInV1);
-                            countUsersToReactivate++;
-                        }
+                        //This LDAP user is in V1, but is inactive,
+                        //so it needs to be reactivated in V1.
+                        userInV1.Reactivate = true;
+                        userInV1.Email = directoryUser.Email;
+                        v1ActionList.Add(userInV1);
+                        countUsersToReactivate++;
                     }
                 }
-
-                if (LdapUserFoundInV1 == false)
+                else
                 {
-                    //This LDAP user is not in V1, so it needs to be created in V1.
-                    userInLdap.Create = true;
-                    v1ActionList.Add(userInLdap);
+                    //This directory user is not in V1, so it needs to be created in V1.
+                    directoryUser.Create = true;
+                    v1ActionList.Add(directoryUser);
                     countUsersToCreate++;
                 }
             }
 
             //Look for a match using V1 as the master list...           
-            foreach (User userInV1 in versionOneUsers)
+            foreach (User userInV1 in versionOneUsers.Values)
             {
-                V1UserFoundInLDAP = false;
-                foreach (User userInLdap in ldapUsers)
-                {
-                    if (userInLdap.Username == userInV1.Username)
-                    {
-                        V1UserFoundInLDAP = true;
-                    }
-                }
-                
-                if (V1UserFoundInLDAP == false)
+                if (!directoryUsers.ContainsKey(userInV1.Username))
                 {
                     if (userInV1.CheckInactivate && userInV1.V1MemberAsset.Oid.Token != V1Constants.DEFAULTADMINOID)
                     {
@@ -208,10 +132,10 @@ namespace VersionOne.Provisioning
                         v1ActionList.Add(userInV1);
                         countUsersToDeactivate++;
                     }
-                }  
+                }
             }
 
-            logger.Info(countUsersToCreate + " LDAP users have been marked for creation in VersionOne.");
+            logger.Info(countUsersToCreate + " Directory users have been marked for creation in VersionOne.");
             logger.Info(countUsersToDeactivate + " VersionOne users have been marked for deactivation.");
             logger.Info(countUsersToReactivate + " VersionOne users have been marked for reactivation.");
 
@@ -223,7 +147,7 @@ namespace VersionOne.Provisioning
         {
             /*
              * Takes the action list that resulted from the comparison between 
-             * the LDAP user list and the V1 user list, and takes the appropriate 
+             * the Directory user list and the V1 user list, and takes the appropriate 
              * action in V1. 
             */
             StringCollection deactivatedUsers = new StringCollection();
@@ -255,29 +179,18 @@ namespace VersionOne.Provisioning
 
             if (addedUsers.Count > 0 || deactivatedUsers.Count > 0 || reactivatedUsers.Count > 0)
             {
-                smtpAdaptor.SendAdminNotification(addedUsers, reactivatedUsers, deactivatedUsers);
+                _smtpAdaptor.SendAdminNotification(addedUsers, reactivatedUsers, deactivatedUsers);
             }
         }
 
-        //private IList<string> BuildV1UsernamesList1(AssetList versionOneUsers)
-        //{
-        //    IList<string> v1Usernames = new List<string>();
-        //    IAttributeDefinition usernameAttribute = _model.GetAttributeDefinition(V1Constants.USERNAME);
 
-        //    foreach (Asset userinV1 in versionOneUsers)
-        //    {
-        //        v1Usernames.Add(userinV1.GetAttribute(usernameAttribute).Value.ToString().Trim());
-        //    }
-        //    return v1Usernames;
-        //}
-
-        private IList<User> BuildV1UsersList(AssetList versionOneUsers)
+        private IDictionary<string, User> BuildV1UsersList(AssetList versionOneUsers)
         {
-            IList<User> v1Usernames = new List<User>();
+            IDictionary<string, User> v1Usernames = new Dictionary<string, User>();
             IAttributeDefinition usernameAttribute = _model.GetAttributeDefinition(V1Constants.USERNAME);
             IAttributeDefinition isInactiveAttribute = _model.GetAttributeDefinition(V1Constants.ISINACTIVE);
             IAttributeDefinition ckInactivate = _model.GetAttributeDefinition(V1Constants.CHECKINACTIVATE);
-            
+
             foreach (Asset userinV1 in versionOneUsers)
             {
                 User v1User = new User();
@@ -285,7 +198,7 @@ namespace VersionOne.Provisioning
                 v1User.V1MemberAsset = userinV1;
                 v1User.CheckInactivate = bool.Parse(userinV1.GetAttribute(ckInactivate).Value.ToString());
                 v1User.IsInactive = bool.Parse(userinV1.GetAttribute(isInactiveAttribute).Value.ToString());
-                v1Usernames.Add(v1User);
+                v1Usernames.Add(v1User.Username, v1User);
             }
             return v1Usernames;
         }
@@ -299,16 +212,15 @@ namespace VersionOne.Provisioning
                 IOperation inactivateMember = _model.GetOperation(V1Constants.INACTIVATE);
                 Oid deactivatedOid = _services.ExecuteOperation(inactivateMember, user.V1MemberAsset.Oid);
 
-                _deactivatedMembers.Add(user);
-
                 logger.Info("Member with username '" + username + "' has been DEACTIVATED in the VersionOne system.");
             }
 
             catch (Exception ex)
             {
-                logger.ErrorException("Attempt to deactivate Member with username '" + username + "' in the VersionOne system has FAILED.",ex);
+                logger.ErrorException(
+                    "Attempt to deactivate Member with username '" + username + "' in the VersionOne system has FAILED.",
+                    ex);
             }
-           
         }
 
         private void CreateNewVersionOneMember(User user)
@@ -331,60 +243,38 @@ namespace VersionOne.Provisioning
                 newMember.SetAttributeValue(nameAttribute, user.FullName);
                 newMember.SetAttributeValue(nicknameAttribute, user.Nickname);
                 newMember.SetAttributeValue(emailAttribute, user.Email);
-                newMember.SetAttributeValue(defaultRoleAttribute, this._defaultRole);  
+                newMember.SetAttributeValue(defaultRoleAttribute, this._defaultRole);
                 _services.Save(newMember);
+                user.V1MemberAsset = newMember;
 
-                smtpAdaptor.SendUserNotification(username, password, user.Email);
+                _smtpAdaptor.SendUserNotification(username, password, user.Email);
 
                 logger.Info("Member with username '" + username + "' has been CREATED in the VersionOne system.");
             }
 
             catch (Exception ex)
             {
-                logger.ErrorException("Attempt to create Member with username '" + username + "' in the VersionOne system has FAILED.",ex);
+                logger.ErrorException(
+                    "Attempt to create Member with username '" + username + "' in the VersionOne system has FAILED.", ex);
             }
-            
         }
 
-        private string GeneratePassword(string username)
+        private static string GeneratePassword(string username)
         {
             return username + Guid.NewGuid().ToString().Substring(0, 6);
         }
 
-        //private Oid GetMemberOidByUsername(string username)
-        //{
-        //    IAssetType memberType = _model.GetAssetType(V1Constants.MEMBER);
-        //    Query userQuery = new Query(memberType);
-        //    IAttributeDefinition usernameAttribute = memberType.GetAttributeDefinition("Username");
-        //    userQuery.Selection.Add(usernameAttribute);
-
-        //    FilterTerm term = new FilterTerm(usernameAttribute);
-        //    term.Equal(username);
-        //    userQuery.Filter = term;
-
-        //    QueryResult result = _services.Retrieve(userQuery);
-        //    if (result.Assets.Count > 0)
-        //    {
-        //        return result.Assets[0].Oid;
-        //    }
-        //    else
-        //    {
-        //        return null;
-        //    }
-        //   }
 
         public void ReactivateVersionOneMember(User userToReactivate)
         {
             /***
              * Reactivation is subject to a few parameters set in configuration.  
              * These determine the user's Project Access, Default Role, and Password upon reactivation.
-             ****/ 
-            
-            string resultString = "";
-            string newPassword = "";
+             ****/
+
             string username = userToReactivate.Username;
             Oid memberOid = userToReactivate.V1MemberAsset.Oid;
-            
+
             try
             {
                 Asset member = userToReactivate.V1MemberAsset;
@@ -395,44 +285,25 @@ namespace VersionOne.Provisioning
 
                 //Assign the user a new password
                 IAttributeDefinition passwordAttribute = _model.GetAttributeDefinition(V1Constants.PASSWORD);
-                newPassword = GeneratePassword(username);
+                string newPassword = GeneratePassword(username);
                 member.SetAttributeValue(passwordAttribute, newPassword);
-                 _services.Save(member);
+                _services.Save(member);
 
-                
-                smtpAdaptor.SendUserNotification(username, newPassword, userToReactivate.Email);
+
+                _smtpAdaptor.SendUserNotification(username, newPassword, userToReactivate.Email);
                 logger.Info("Member with username '" + username + "' has been REACTIVATED in the VersionOne system.");
             }
 
             catch (Exception ex)
             {
-                logger.ErrorException("Attempt to reactivate Member with username '" + username + "' in the VersionOne system has FAILED." + ex,ex);
+                logger.ErrorException(
+                    "Attempt to reactivate Member with username '" + username + "' in the VersionOne system has FAILED." +
+                    ex, ex);
             }
-
         }
-
-        //private void RemoveAllProjectAccessFromUser(Oid memberOid)
-        //{
-        //    Query query = new Query(memberOid);
-        //    IAssetType memberType = _model.GetAssetType("Member");
-        //    IAttributeDefinition scopesAttribute = memberType.GetAttributeDefinition("Scopes");
-        //    query.Selection.Add(scopesAttribute);
-        //    QueryResult result = _services.Retrieve(query);
-        //    Asset member = result.Assets[0];
-
-        //    IEnumerable associatedProjects = member.GetAttribute(scopesAttribute).Values;
-
-        //    string strresult = "";
-
-        //    foreach (var scope in associatedProjects)
-        //    {
-        //        member.RemoveAttributeValue(scopesAttribute, scope.ToString());
-        //    }
-        //}
 
         public void DeleteVersionOneMember(User userToDelete)
         {
-            string resultString = "";
             string uname = userToDelete.Username;
 
             try
@@ -440,19 +311,16 @@ namespace VersionOne.Provisioning
                 Oid memberOid = userToDelete.V1MemberAsset.Oid;
 
                 IOperation deleteMember = _model.GetOperation(V1Constants.DELETE);
-                Oid deletedOid = _services.ExecuteOperation(deleteMember, memberOid);
+                _services.ExecuteOperation(deleteMember, memberOid);
 
                 logger.Info("Member with username '" + uname + "' has been DELETED in the VersionOne system.");
             }
 
             catch (Exception ex)
             {
-                logger.ErrorException("Attempt to delete Member with username '" + uname + "' in the VersionOne system has FAILED.",ex);
+                logger.ErrorException(
+                    "Attempt to delete Member with username '" + uname + "' in the VersionOne system has FAILED.", ex);
             }
-
         }
-
-        
-      }
-        
     }
+}

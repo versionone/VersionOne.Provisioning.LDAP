@@ -35,10 +35,9 @@ namespace VersionOne.Provisioning.LDAP.Tests
         [Test]
         public void TestGetUsersFromLdap()
         {
-            LDAPReader ldapReader = new LDAPReader(_ldapServerPath, _ldapGroupMemberAttribute, _ldapUsername, _ldapPassword, ConfigurationManager.AppSettings["mapToV1Username"], ConfigurationManager.AppSettings["mapToV1Fullname"], ConfigurationManager.AppSettings["mapToV1Email"], ConfigurationManager.AppSettings["mapToV1Nickname"], _useDefaultLDAPCredentials);
-            IList<LDAPUser> ldapUsers = new List<LDAPUser>();
+            IUserDirectoryReader ldapReader = new LDAPReader(_ldapServerPath, _ldapGroupMemberAttribute, _ldapUsername, _ldapPassword, ConfigurationManager.AppSettings["mapToV1Username"], ConfigurationManager.AppSettings["mapToV1Fullname"], ConfigurationManager.AppSettings["mapToV1Email"], ConfigurationManager.AppSettings["mapToV1Nickname"], _useDefaultLDAPCredentials);
 
-            ldapUsers = ldapReader.GetUsersFromLdap(_ldapGroupDN);
+            IList<DirectoryUser> ldapUsers = ldapReader.GetUsers(_ldapGroupDN);
              
             
             Assert.AreEqual(2,ldapUsers.Count);

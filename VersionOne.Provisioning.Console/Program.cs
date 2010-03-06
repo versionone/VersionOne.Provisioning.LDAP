@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using VersionOne.Provisioning.LDAP;
 using VersionOne.SDK.APIClient;
 using NLog;
 
@@ -15,31 +16,14 @@ namespace VersionOne.Provisioning.Console
     class Program
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
-        private static string _proxyServerUri = ConfigurationManager.AppSettings["proxyServerUri"];
-        private static string _proxyUsername = ConfigurationManager.AppSettings["proxyUsername"];
-        private static string _proxyPassword = ConfigurationManager.AppSettings["proxyPassword"];
-        private static string _proxyDomain = ConfigurationManager.AppSettings["proxyDomain"];
 
         static void Main(string[] args)
         {
             try
             {
                 Manager manager = CreateManager();
-
-                if (ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
-                {
-                    manager.UseDefaultLDAPCredentials = true;
-                }
-                manager.GroupMemberAttribute = ConfigurationManager.AppSettings["ldapGroupMemberAttribute"];
-                manager.UsernameMapping = ConfigurationManager.AppSettings["mapToV1Username"];
-                manager.FullnameMapping = ConfigurationManager.AppSettings["mapToV1Fullname"];
-                manager.EmailMapping = ConfigurationManager.AppSettings["mapToV1Email"];
-                manager.NicknameMapping = ConfigurationManager.AppSettings["mapToV1Nickname"];
-                
-                IList<User> v1Users = manager.GetVersionOneUsers();
-                IList<User> ldapUsers = manager.BuildLdapUsersList(ConfigurationManager.AppSettings["ldapServerPath"],
-                                           ConfigurationManager.AppSettings["ldapGroupDN"],
-                                           ConfigurationManager.AppSettings["ldapUsername"], ConfigurationManager.AppSettings["ldapPasswword"]);
+                IDictionary<string, User> v1Users = manager.GetVersionOneUsers();
+                IDictionary<string, User> ldapUsers = manager.GetDirectoryUsers(ConfigurationManager.AppSettings["ldapGroupDN"]);
                 IList<User> actionUsers = manager.CompareUsers(ldapUsers, v1Users);
                 manager.UpdateVersionOne(actionUsers);
            }
@@ -53,72 +37,24 @@ namespace VersionOne.Provisioning.Console
 
         private static Manager CreateManager()
         {
-            string _V1Instance = ConfigurationManager.AppSettings["V1Instance"];
-            string _V1Login = ConfigurationManager.AppSettings["V1InstanceUsername"];
-            string _V1Password = ConfigurationManager.AppSettings["V1InstancePassword"];
-            
-            IAPIConnector metaConn;
-            IAPIConnector dataConn;
-
-            //Added to work with a proxy
-            if (!String.IsNullOrEmpty(_proxyServerUri))
-            {
-                WebProxyBuilder proxyBuilder = new WebProxyBuilder();
-                WebProxy webProxy = proxyBuilder.Build(_proxyServerUri, _proxyUsername, _proxyPassword, _proxyDomain);
-                metaConn = new V1APIConnector(_V1Instance + @"meta.v1/", webProxy);
-                dataConn = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password, false, webProxy);
-            }
-            else
-            {
-                metaConn = new V1APIConnector(_V1Instance + @"meta.v1/");
-                dataConn = new V1APIConnector(_V1Instance + @"rest-1.v1/", _V1Login, _V1Password);
-            }
-            
-            IMetaModel metaModel = new MetaModel(metaConn);
-            IServices services = new Services(metaModel, dataConn);
-            UserNotificationEmail userNotificationEmail = new UserNotificationEmail
-              {
-                  AdminEmail =
-                      ConfigurationManager.AppSettings["adminEmail"],
-                  AdminFullName =
-                      ConfigurationManager.AppSettings["adminFullName"],
-                  Body =
-                      Utils.ReadFile(
-                      ConfigurationManager.AppSettings["userNotificationEmailBodyFilename"]),
-                  Subject =
-                      ConfigurationManager.AppSettings["userNotificationEmailSubject"],
-                  VersionOneUrl =
-                      ConfigurationManager.AppSettings["V1Instance"]
-              };
-            AdminNotificationEmail adminNotificationEmail = new AdminNotificationEmail
-            {
-                AdminEmail =
-                    ConfigurationManager.AppSettings["adminEmail"],
-                BodyTemplate =
-                    Utils.ReadFile(
-                    ConfigurationManager.AppSettings["adminNotificationEmailBodyTemplateFilename"]),
-                AddedUsersSection =
-                    Utils.ReadFile(
-                    ConfigurationManager.AppSettings["adminNotificationEmailBodyNewUsersFilename"]),
-                ReactivatedUsersSection =
-                    Utils.ReadFile(
-                    ConfigurationManager.AppSettings["adminNotificationEmailBodyReactivatedUsersFilename"]),
-                DeactivatedUsersSection =
-                    Utils.ReadFile(
-                    ConfigurationManager.AppSettings["adminNotificationEmailBodyDeactivatedUsersFilename"]),
-                Subject =
-                    ConfigurationManager.AppSettings["adminNotificationEmailSubject"],
-                VersionOneUrl =
-                    ConfigurationManager.AppSettings["V1Instance"]
-            };
-
-            SmtpClient smtpClient = new SmtpClient();
-            smtpClient.EnableSsl = bool.Parse(ConfigurationManager.AppSettings["smtpEnableSSL"]);
-            SmtpAdaptor smtpAdaptor = new SmtpAdaptor(userNotificationEmail, adminNotificationEmail, smtpClient);
-
-            return new Manager(services, metaModel, ConfigurationManager.AppSettings["V1UserDefaultRole"], smtpAdaptor);
+            V1Instance v1 = Factory.GetV1Instance();
+            SmtpAdaptor smtpAdaptor = Factory.GetSmtpAdaptor();
+            IUserDirectoryReader ldapReader = GetLdapReader();
+            return new Manager(v1, smtpAdaptor, ldapReader);
         }
 
-        
+        public static IUserDirectoryReader GetLdapReader()
+        {
+            bool useDefaultLDAPCredentials = false;
+            if (ConfigurationManager.AppSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
+            {
+                useDefaultLDAPCredentials = true;
+            }
+            return new LDAPReader(ConfigurationManager.AppSettings["ldapServerPath"], 
+                                  ConfigurationManager.AppSettings["ldapGroupMemberAttribute"], ConfigurationManager.AppSettings["ldapUsername"], 
+                                  ConfigurationManager.AppSettings["ldapPasswword"], ConfigurationManager.AppSettings["mapToV1Username"],
+                                  ConfigurationManager.AppSettings["mapToV1Fullname"], ConfigurationManager.AppSettings["mapToV1Email"], 
+                                  ConfigurationManager.AppSettings["mapToV1Nickname"], useDefaultLDAPCredentials);
+        }
     }
 }
