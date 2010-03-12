@@ -21,9 +21,12 @@ namespace VersionOne.Provisioning
             string proxyPassword = ConfigurationManager.AppSettings["proxyPassword"];
             string proxyDomain = ConfigurationManager.AppSettings["proxyDomain"];
             string defaultRole = ConfigurationManager.AppSettings["V1UserDefaultRole"];
+            string useIntegratedAuth = ConfigurationManager.AppSettings["IntegratedAuth"];
             
             IAPIConnector metaConn;
             IAPIConnector dataConn;
+            bool useIntegrated = useIntegratedAuth.Equals("true");
+            
 
             //Added to work with a proxy
             if (!String.IsNullOrEmpty(proxyServerUri))
@@ -31,12 +34,19 @@ namespace VersionOne.Provisioning
                 WebProxyBuilder proxyBuilder = new WebProxyBuilder();
                 WebProxy webProxy = proxyBuilder.Build(proxyServerUri, proxyUsername, proxyPassword, proxyDomain);
                 metaConn = new V1APIConnector(V1Instance + @"meta.v1/", webProxy);
-                dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password, false, webProxy);
+                dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password, useIntegrated, webProxy);
             }
             else
             {
                 metaConn = new V1APIConnector(V1Instance + @"meta.v1/");
-                dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password);
+                if (useIntegrated)
+                {
+                    dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/");
+                }
+                else
+                {
+                    dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password);
+                }
             }
             
             IMetaModel metaModel = new MetaModel(metaConn);

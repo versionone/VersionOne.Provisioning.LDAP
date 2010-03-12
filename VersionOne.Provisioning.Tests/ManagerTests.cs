@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Configuration;
 using NUnit.Framework;
 using VersionOne.Provisioning;
 using VersionOne.SDK.APIClient;
@@ -20,6 +21,22 @@ namespace VersionOne.Provisioning.Tests
             IUserDirectoryReader ldapReader = new DirectoryReaderStub();
             ISmtpAdaptor smtpAdaptor = new SmtpAdaptorStub();
             manager = new Manager(v1, smtpAdaptor, ldapReader);
+        }
+
+        [Test]
+        public void TestUseIntegratedAuth()
+        {
+           
+            ConfigurationManager.AppSettings.Set("IntegratedAuth","true");
+            string instanceLocation = ConfigurationManager.AppSettings.Get("V1InstanceIntegratedAuth");
+            ConfigurationManager.AppSettings.Set("V1Instance", instanceLocation);
+            V1Instance v1Authorized = Factory.GetV1Instance();
+            IUserDirectoryReader ldapReader = new DirectoryReaderStub();
+            ISmtpAdaptor smtpAdaptor = new SmtpAdaptorStub();
+            Manager authorizedManager = new Manager(v1Authorized, smtpAdaptor, ldapReader);
+            Assert.IsNotNull(authorizedManager);
+            IDictionary<string, User> users = authorizedManager.GetVersionOneUsers();
+            Assert.Greater(users.Count,0);
         }
 
         [Test]
@@ -81,7 +98,7 @@ namespace VersionOne.Provisioning.Tests
         public void TestUpdateVersionOne()
         {
             IDictionary<string, User> v1Users = manager.GetVersionOneUsers();
-            Assert.AreEqual(11, v1Users.Count);
+            int currentCount = v1Users.Count;
 
             IList<User> usersToAction = new List<User>();
 
@@ -99,7 +116,7 @@ namespace VersionOne.Provisioning.Tests
             manager.UpdateVersionOne(usersToAction);
 
             v1Users = manager.GetVersionOneUsers();
-            Assert.AreEqual(12, v1Users.Count);
+            Assert.AreEqual(currentCount + 1, v1Users.Count);
             
             ResetV1Data(userToAdd, userToDeactivate, userToDeactivate2);
         }
