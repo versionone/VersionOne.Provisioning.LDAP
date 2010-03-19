@@ -21,6 +21,7 @@ namespace VersionOne.Provisioning.Console
         {
             try
             {
+                Factory.ValidateConfiguration();
                 Manager manager = CreateManager();
                 IDictionary<string, User> v1Users = manager.GetVersionOneUsers();
                 IDictionary<string, User> ldapUsers = manager.GetDirectoryUsers();

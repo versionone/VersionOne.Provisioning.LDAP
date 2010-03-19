@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
 using NUnit.Framework;
@@ -26,8 +27,10 @@ namespace VersionOne.Provisioning.Tests
         [Test]
         public void TestUseIntegratedAuth()
         {
-           
-            ConfigurationManager.AppSettings.Set("IntegratedAuth","true");
+
+            ConfigurationManager.AppSettings.Set("IntegratedAuth", "true");
+            ConfigurationManager.AppSettings.Set("V1InstanceUsername","");
+            ConfigurationManager.AppSettings.Set("V1InstancePassword","");
             string instanceLocation = ConfigurationManager.AppSettings.Get("V1InstanceIntegratedAuth");
             ConfigurationManager.AppSettings.Set("V1Instance", instanceLocation);
             V1Instance v1Authorized = Factory.GetV1Instance();
@@ -36,7 +39,7 @@ namespace VersionOne.Provisioning.Tests
             Manager authorizedManager = new Manager(v1Authorized, smtpAdaptor, ldapReader);
             Assert.IsNotNull(authorizedManager);
             IDictionary<string, User> users = authorizedManager.GetVersionOneUsers();
-            Assert.Greater(users.Count,0);
+            Assert.Greater(users.Count, 0);
         }
 
         [Test]
@@ -44,7 +47,7 @@ namespace VersionOne.Provisioning.Tests
         {
             IDictionary<string, User> ldapUsersList = manager.GetDirectoryUsers();
             Assert.AreEqual(2, ldapUsersList.Count);
-            
+
         }
 
         [Test]
@@ -70,26 +73,26 @@ namespace VersionOne.Provisioning.Tests
 
             foreach (User user in usersToAction)
             {
-               if (user.Username == "abe")
-               {
-                   Assert.IsTrue(user.Create);
-               }
-               else if (user.Username == "ben")
-               {
-                   Assert.IsTrue(user.Create);
-               }
-               else if (user.Username == "cam")
-               {
-                   Assert.IsTrue(user.Create);
-               }
-               else if (user.Username == "val")
-               {
-                   Assert.IsTrue(user.Reactivate);
-               }
-               else if (user.Username == "tom")
-               {
-                   Assert.IsTrue(user.Deactivate);
-               }
+                if (user.Username == "abe")
+                {
+                    Assert.IsTrue(user.Create);
+                }
+                else if (user.Username == "ben")
+                {
+                    Assert.IsTrue(user.Create);
+                }
+                else if (user.Username == "cam")
+                {
+                    Assert.IsTrue(user.Create);
+                }
+                else if (user.Username == "val")
+                {
+                    Assert.IsTrue(user.Reactivate);
+                }
+                else if (user.Username == "tom")
+                {
+                    Assert.IsTrue(user.Deactivate);
+                }
             }
 
         }
@@ -111,14 +114,57 @@ namespace VersionOne.Provisioning.Tests
             User userToDeactivate2 = testUserFactory.CreateUserToDeactivate("joe");
             usersToAction.Add(userToDeactivate2);
 
-            Assert.AreEqual(3,usersToAction.Count);
+            Assert.AreEqual(3, usersToAction.Count);
 
             manager.UpdateVersionOne(usersToAction);
 
             v1Users = manager.GetVersionOneUsers();
             Assert.AreEqual(currentCount + 1, v1Users.Count);
-            
+
             ResetV1Data(userToAdd, userToDeactivate, userToDeactivate2);
+        }
+
+        [Test]
+        public void TestConfigurationValidationGood()
+        {
+            try
+            {
+                Factory.ValidateConfiguration();
+
+            }
+            catch (Exception error)
+            {
+
+                Assert.Fail(error.Message);
+            }
+
+        }
+        [Test]
+        public void TestMissingVersionOneConfigValues()
+        {
+            bool caughtException = false;
+                  string noKey = ConfigurationManager.AppSettings["bobsyouruncle"];
+           try
+            {
+               InvalidateAppSettings();
+                Factory.ValidateConfiguration();
+            }
+            catch (Exception error)
+            {
+                caughtException = true;
+            }
+            Assert.IsTrue(caughtException,"Didn't catch a missing value");
+        }
+
+       
+        private void InvalidateAppSettings()
+        {
+            ConfigurationManager.AppSettings.Set("V1Instance", "");
+            ConfigurationManager.AppSettings.Set("V1InstanceUserName", "");
+            ConfigurationManager.AppSettings.Set("V1InstancePassword", "");
+            ConfigurationManager.AppSettings.Set("V1UserDefaultRole", "");
+            ConfigurationManager.AppSettings.Set("IntegratedAuth","");
+            ConfigurationManager.AppSettings.Set("ldapGroupMemberAttribute", "");
         }
 
         private void ResetV1Data(User userToAdd, User userToDeactivate, User userToDeactivate2)

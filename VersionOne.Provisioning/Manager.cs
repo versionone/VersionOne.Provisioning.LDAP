@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Configuration;
 using NLog;
 using VersionOne.SDK.APIClient;
 
@@ -14,7 +15,7 @@ namespace VersionOne.Provisioning
         private readonly IUserDirectoryReader _directoryReader;
         private readonly ISmtpAdaptor _smtpAdaptor;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
-        
+
         public Manager(V1Instance v1, ISmtpAdaptor smtpAdaptor, IUserDirectoryReader ldapreader)
         {
             _services = v1.Services;
@@ -42,7 +43,7 @@ namespace VersionOne.Provisioning
             IDictionary<string, User> v1UserList = BuildV1UsersList(result.Assets);
 
             logger.Info(v1UserList.Count + " users successfully retrieved from VersionOne.");
-                //[count] users successfully retrieved from V1...
+            //[count] users successfully retrieved from V1...
 
             return v1UserList;
         }
@@ -322,5 +323,6 @@ namespace VersionOne.Provisioning
                     "Attempt to delete Member with username '" + uname + "' in the VersionOne system has FAILED.", ex);
             }
         }
+
     }
 }
