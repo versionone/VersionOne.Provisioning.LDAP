@@ -23,28 +23,37 @@ namespace VersionOne.Provisioning
             string proxyDomain = ConfigurationManager.AppSettings["proxyDomain"];
             string defaultRole = ConfigurationManager.AppSettings["V1UserDefaultRole"];
             string useIntegratedAuth = ConfigurationManager.AppSettings["IntegratedAuth"];
-            
-            IAPIConnector metaConn;
-            IAPIConnector dataConn;
-            bool useIntegrated = useIntegratedAuth.Equals("true");
-            logger.Info("Attaching to version one at: " + V1Instance);
-            //Added to work with a proxy
-            if (!String.IsNullOrEmpty(proxyServerUri))
+
+            try
             {
-                WebProxyBuilder proxyBuilder = new WebProxyBuilder();
-                WebProxy webProxy = proxyBuilder.Build(proxyServerUri, proxyUsername, proxyPassword, proxyDomain);
-                metaConn = new V1APIConnector(V1Instance + @"meta.v1/", webProxy);
-                dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password, useIntegrated, webProxy);
+
+                IAPIConnector metaConn;
+                IAPIConnector dataConn;
+                bool useIntegrated = useIntegratedAuth.Equals("true");
+                logger.Info("Attaching to version one at: " + V1Instance);
+                //Added to work with a proxy
+                if (!String.IsNullOrEmpty(proxyServerUri))
+                {
+                    WebProxyBuilder proxyBuilder = new WebProxyBuilder();
+                    WebProxy webProxy = proxyBuilder.Build(proxyServerUri, proxyUsername, proxyPassword, proxyDomain);
+                    metaConn = new V1APIConnector(V1Instance + @"meta.v1/", webProxy);
+                    dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password, useIntegrated, webProxy);
+                }
+                else
+                {
+                    metaConn = new V1APIConnector(V1Instance + @"meta.v1/");
+                    dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password, useIntegrated);
+                }
+
+                IMetaModel metaModel = new MetaModel(metaConn);
+                IServices services = new Services(metaModel, dataConn);
+                return new V1Instance(services, metaModel, defaultRole);
             }
-            else
+            catch (Exception error)
             {
-                metaConn = new V1APIConnector(V1Instance + @"meta.v1/");
-                dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password,useIntegrated);
+                logger.Error(error.Message);
+                throw(error);
             }
-            
-            IMetaModel metaModel = new MetaModel(metaConn);
-            IServices services = new Services(metaModel, dataConn);
-            return new V1Instance(services, metaModel, defaultRole);
         }
 
         public static SmtpAdaptor GetSmtpAdaptor()
@@ -92,11 +101,10 @@ namespace VersionOne.Provisioning
 
         public static void ValidateConfiguration()
         {
-            bool validConfig = true;
-            validConfig = CheckVersionOneSettings();
-            validConfig = CheckLDAPSettings();
+            bool validV1Config = CheckVersionOneSettings();
+            bool validLDAPConfig = CheckLDAPSettings();
 
-            if(!validConfig)
+            if ((!validV1Config) || (!validLDAPConfig))
             {
                 Exception error = new Exception("There are errors in the configuration.  Please check the application log for more information");
                 throw error;
@@ -109,14 +117,14 @@ namespace VersionOne.Provisioning
         {
             bool success = true;
             string[] values = {"ldapGroupMemberAttribute",  "ldapServerPath",   "ldapGroupDN",
-                               "ldapUsername",              "ldapPassword",     "maptoV1Username", 
-                               "maptoV1Fullname",           "mapToV1Email",     "mapToV1Nickname",
-                               "useDefaultLDAPCredentials" };
-           foreach(string entry in values)
-           {
-               if(!checkForEmptyValue(entry))
-                   success = false;
-           }
+                               "maptoV1Username",           "maptoV1Fullname",  "mapToV1Email",
+                               "mapToV1Nickname",           "useDefaultLDAPCredentials" };
+            foreach (string entry in values)
+            {
+                if (!CheckForEmptyValue(entry))
+                    success = false;
+            }
+            return success;
         }
 
         private static bool CheckVersionOneSettings()
@@ -124,22 +132,22 @@ namespace VersionOne.Provisioning
             bool success = true;
             logger.Info("Checking that VersionOne Settings are present");
 
-            if(!checkForEmptyValue("V1Instance"))
+            if (!CheckForEmptyValue("V1Instance"))
             {
                 success = false;
             }
-            if (!checkForEmptyValue("IntegratedAuth"))
+            if (!CheckForEmptyValue("IntegratedAuth"))
             {
                 success = false;
             }
             if (ConfigurationManager.AppSettings["IntegratedAuth"].Equals("false"))
             {
-                if ((!checkForEmptyValue("V1InstancePassword")) || (!checkForEmptyValue("V1InstanceUserName")))
+                if ((!CheckForEmptyValue("V1InstancePassword")) || (!CheckForEmptyValue("V1InstanceUserName")))
                 {
                     success = false;
                 }
             }
-            if(!checkForEmptyValue("V1UserDefaultRole"))
+            if (!CheckForEmptyValue("V1UserDefaultRole"))
             {
                 success = false;
             }
@@ -148,21 +156,22 @@ namespace VersionOne.Provisioning
 
         }
 
-        private static bool checkForEmptyValue(string key)
+
+        private static bool CheckForEmptyValue(string key)
         {
             try
             {
-                if(ConfigurationManager.AppSettings[key].Length == 0)
+                if (ConfigurationManager.AppSettings[key].Length == 0)
                 {
-                    logger.Error("Application Config error: " +key + " can not be empty");
+                    logger.Error("Application Config error: " + key + " can not be empty");
                     return false;
                 }
 
             }
             catch (Exception error)
             {
-                
-               logger.Error(error.Message);
+
+                logger.Error(error.Message);
             }
             return true;
         }

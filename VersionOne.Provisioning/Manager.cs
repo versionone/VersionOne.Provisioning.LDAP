@@ -69,6 +69,7 @@ namespace VersionOne.Provisioning
                         user.Nickname = directoryUser.Nickname;
                         users.Add(user.Username, user);
 
+                        
                         logger.Debug("Member retrieved from directory: " + user.Username);
                     }
                     else

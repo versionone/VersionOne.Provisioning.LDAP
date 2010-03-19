@@ -143,7 +143,6 @@ namespace VersionOne.Provisioning.Tests
         public void TestMissingVersionOneConfigValues()
         {
             bool caughtException = false;
-                  string noKey = ConfigurationManager.AppSettings["bobsyouruncle"];
            try
             {
                InvalidateAppSettings();
