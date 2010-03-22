@@ -151,9 +151,37 @@ namespace VersionOne.Provisioning
             {
                 success = false;
             }
+            if(!CheckConnectionValid())
+            {
+                success = false;
+            }
             return success;
 
 
+
+        }
+
+        public static bool CheckConnectionValid()
+        {
+            bool success = true;
+            string connectionAddress = ConfigurationManager.AppSettings["V1Instance"];
+            string userName = ConfigurationManager.AppSettings["V1InstanceUsername"];
+            string userPassword = ConfigurationManager.AppSettings["V1InstancePassword"];
+            bool useIntegrated = ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true");
+            V1ConnectionValidator connectionValidator = new V1ConnectionValidator(connectionAddress,userName,userPassword,useIntegrated);
+            try
+            {
+              connectionValidator.Test();
+
+            }
+            catch (Exception error)
+            {
+
+                success = false;
+                logger.Error(error.Message);
+            }
+            
+            return success;
         }
 
 

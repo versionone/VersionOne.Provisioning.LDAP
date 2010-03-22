@@ -155,6 +155,26 @@ namespace VersionOne.Provisioning.Tests
             Assert.IsTrue(caughtException,"Didn't catch a missing value");
         }
 
+        [Test]
+        public void TestBadConnectionSettings()
+        {
+           
+            string instanceLocation = ConfigurationManager.AppSettings["V1Instance"];
+            string userName = ConfigurationManager.AppSettings["V1InstanceUsername"];
+            string userPassword = ConfigurationManager.AppSettings["V1InstancePassword"];
+            ConfigurationManager.AppSettings.Set("V1Instance","http://bobsyouruncle");
+            bool connectionWorked = connectionWorked = Factory.CheckConnectionValid();
+            Assert.IsFalse(connectionWorked,"should have failed to connect to bad address");
+            ConfigurationManager.AppSettings.Set("V1Instance",instanceLocation);
+            ConfigurationManager.AppSettings.Set("V1InstanceUsername", "notarealuser");
+            connectionWorked = Factory.CheckConnectionValid();
+            Assert.IsFalse(connectionWorked,"Bad username should have failed");
+            ConfigurationManager.AppSettings.Set("V1InstanceUsername",userName);
+            ConfigurationManager.AppSettings.Set("V1InstancePassword","badpassword");
+            connectionWorked = Factory.CheckConnectionValid();
+            Assert.IsFalse(connectionWorked,"Bad password should have failed");
+            ConfigurationManager.AppSettings.Set("v1InstancePassword",userPassword);
+        }
        
         private void InvalidateAppSettings()
         {

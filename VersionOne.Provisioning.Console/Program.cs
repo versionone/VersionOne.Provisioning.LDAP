@@ -30,7 +30,7 @@ namespace VersionOne.Provisioning.Console
            }
             catch(Exception ex)
             {
-                logger.ErrorException("An error has occurred.",ex);
+                logger.Error(ex.Message);
 
             }
 
