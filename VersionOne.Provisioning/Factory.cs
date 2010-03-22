@@ -130,23 +130,8 @@ namespace VersionOne.Provisioning
         private static bool CheckVersionOneSettings()
         {
             bool success = true;
-            logger.Info("Checking that VersionOne Settings are present");
+            logger.Info("Checking VersionOne Settings");
 
-            if (!CheckForEmptyValue("V1Instance"))
-            {
-                success = false;
-            }
-            if (!CheckForEmptyValue("IntegratedAuth"))
-            {
-                success = false;
-            }
-            if (ConfigurationManager.AppSettings["IntegratedAuth"].Equals("false"))
-            {
-                if ((!CheckForEmptyValue("V1InstancePassword")) || (!CheckForEmptyValue("V1InstanceUserName")))
-                {
-                    success = false;
-                }
-            }
             if (!CheckForEmptyValue("V1UserDefaultRole"))
             {
                 success = false;
@@ -156,8 +141,6 @@ namespace VersionOne.Provisioning
                 success = false;
             }
             return success;
-
-
 
         }
 
@@ -187,20 +170,11 @@ namespace VersionOne.Provisioning
 
         private static bool CheckForEmptyValue(string key)
         {
-            try
-            {
                 if (ConfigurationManager.AppSettings[key].Length == 0)
                 {
                     logger.Error("Application Config error: " + key + " can not be empty");
                     return false;
                 }
-
-            }
-            catch (Exception error)
-            {
-
-                logger.Error(error.Message);
-            }
             return true;
         }
 

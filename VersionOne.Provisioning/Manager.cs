@@ -228,6 +228,7 @@ namespace VersionOne.Provisioning
         private void CreateNewVersionOneMember(User user)
         {
             string username = user.Username;
+            string password = GeneratePassword(username);
 
             try
             {
@@ -239,7 +240,6 @@ namespace VersionOne.Provisioning
                 IAttributeDefinition nicknameAttribute = memberType.GetAttributeDefinition("Nickname");
                 IAttributeDefinition emailAttribute = memberType.GetAttributeDefinition("Email");
                 IAttributeDefinition defaultRoleAttribute = memberType.GetAttributeDefinition("DefaultRole");
-                string password = GeneratePassword(username);
                 newMember.SetAttributeValue(usernameAttribute, username);
                 newMember.SetAttributeValue(passwordAttribute, password);
                 newMember.SetAttributeValue(nameAttribute, user.FullName);
@@ -249,15 +249,28 @@ namespace VersionOne.Provisioning
                 _services.Save(newMember);
                 user.V1MemberAsset = newMember;
 
-                _smtpAdaptor.SendUserNotification(username, password, user.Email);
 
                 logger.Info("Member with username '" + username + "' has been CREATED in the VersionOne system.");
-            }
+                NotifyUser(user, username, password);
+          }
 
             catch (Exception ex)
             {
                 logger.ErrorException(
                     "Attempt to create Member with username '" + username + "' in the VersionOne system has FAILED.", ex);
+            }
+       }
+
+        private void NotifyUser(User user, string username, string password)
+        {
+            try
+            {
+                _smtpAdaptor.SendUserNotification(username, password, user.Email);
+
+            }
+            catch (Exception error)
+            {
+                logger.Error("Failed to send notification to user: " + username + ": " + error.Message);
             }
         }
 

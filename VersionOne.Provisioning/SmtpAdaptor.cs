@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Specialized;
 using System.Net.Mail;
 using NLog;
@@ -38,7 +39,16 @@ namespace VersionOne.Provisioning
 
         public void SendAdminNotification(StringCollection addedUsernames, StringCollection reactivatedUsernames, StringCollection deactivatedUsernames)
         {
+            try
+            {
             Send(adminEmail.CreateMessage(addedUsernames,reactivatedUsernames,deactivatedUsernames));
+
+            }
+            catch (Exception error)
+            {
+
+                logger.Error("Failed to send notification to admin: " + error.Message);
+            }
         }
 
         private void Send(MailMessage message)
