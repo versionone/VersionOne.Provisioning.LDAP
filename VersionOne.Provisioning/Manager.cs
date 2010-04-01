@@ -56,14 +56,19 @@ namespace VersionOne.Provisioning
                 IList<DirectoryUser> directoryUsers = _directoryReader.GetUsers();
 
                 logger.Info(directoryUsers.Count + " directory members retrieved.");
-
+                string Domain = ConfigurationManager.AppSettings["ldapDomain"];
                 //Get the Ldapuser data into a Provisioning.User collection.
                 foreach (DirectoryUser directoryUser in directoryUsers)
                 {
                     if (!users.ContainsKey(directoryUser.Username))
                     {
                         User user = new User();
-                        user.Username = directoryUser.Username;
+                        if(ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true"))
+                            user.Username = string.Format("{0}\\{1}", Domain, directoryUser.Username);
+                        else
+                        {
+                            user.Username = directoryUser.Username;
+                        }
                         user.FullName = directoryUser.FullName;
                         user.Email = directoryUser.Email;
                         user.Nickname = directoryUser.Nickname;
