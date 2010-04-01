@@ -17,7 +17,7 @@ namespace VersionOne.Provisioning.LDAP.Tests
             IUserDirectoryReader ldapReader = new LDAPReader();
             ldapReader.Initialize(ConfigurationManager.AppSettings);
             IList<DirectoryUser> ldapUsers = ldapReader.GetUsers();
-            Assert.AreEqual(2,ldapUsers.Count);
+            Assert.AreEqual(4,ldapUsers.Count);
         }
 
     }
