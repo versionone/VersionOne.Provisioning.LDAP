@@ -63,7 +63,7 @@ namespace VersionOne.Provisioning
                     if (!users.ContainsKey(directoryUser.Username))
                     {
                         User user = new User();
-                        if(ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true"))
+                        if (UseIntegratedAuthorization())
                             user.Username = string.Format("{0}\\{1}", Domain, directoryUser.Username);
                         else
                         {
@@ -175,7 +175,7 @@ namespace VersionOne.Provisioning
                 }
                 else if (user.Reactivate)
                 {
-                    ReactivateVersionOneMember(user);
+                        ReactivateVersionOneMember(user);
                     reactivatedUsers.Add(user.Username);
                 }
                 else if (user.Delete)
@@ -233,7 +233,11 @@ namespace VersionOne.Provisioning
         private void CreateNewVersionOneMember(User user)
         {
             string username = user.Username;
-            string password = GeneratePassword(username);
+            string password = "";
+            if (!UseIntegratedAuthorization())
+            {
+                password = GeneratePassword(username);
+            }
 
             try
             {
@@ -281,7 +285,8 @@ namespace VersionOne.Provisioning
 
         private static string GeneratePassword(string username)
         {
-            return username + Guid.NewGuid().ToString().Substring(0, 6);
+                return username + Guid.NewGuid().ToString().Substring(0, 6);
+
         }
 
 
@@ -341,6 +346,11 @@ namespace VersionOne.Provisioning
                 logger.ErrorException(
                     "Attempt to delete Member with username '" + uname + "' in the VersionOne system has FAILED.", ex);
             }
+        }
+
+        private bool UseIntegratedAuthorization()
+        {
+            return ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true");
         }
 
     }

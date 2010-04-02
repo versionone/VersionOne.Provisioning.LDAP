@@ -1,23 +1,16 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Mail;
-using System.Text;
 using VersionOne.Provisioning.LDAP;
-using VersionOne.SDK.APIClient;
 using NLog;
 
 namespace VersionOne.Provisioning.Console
 {
-    class Program
+    internal class Program
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             try
             {
@@ -27,13 +20,11 @@ namespace VersionOne.Provisioning.Console
                 IDictionary<string, User> ldapUsers = manager.GetDirectoryUsers();
                 IList<User> actionUsers = manager.CompareUsers(ldapUsers, v1Users);
                 manager.UpdateVersionOne(actionUsers);
-           }
-            catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 logger.Error(ex.Message);
-
             }
-
         }
 
         private static Manager CreateManager()

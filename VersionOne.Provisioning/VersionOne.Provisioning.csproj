@@ -78,6 +78,9 @@
     <Content Include="Common\NLog.dll" />
     <Content Include="Common\nunit.framework.dll" />
     <Content Include="Common\VersionOne.SDK.APIClient.dll" />
+    <Content Include="userNotificationEmailIntegratedAuth.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="userNotificationEmail.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
