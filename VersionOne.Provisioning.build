@@ -61,15 +61,12 @@
         <include name='**\AssemblyInfoCommon.cs' />
       </fileset>
     </attrib>
-    <!--
-    TODO restore when committing
 		<update-version build='${ver.build}' revision='${ver.revision}' >
 			<fileset>
 				<include name='**\AssemblyInfo.cs' />
 				<include name='**\AssemblyInfoCommon.cs' />
 			</fileset>
 		</update-version>
-    -->
   </target>
 
   <target name='cleanscc' description='Remove source control bindings from source code'>
@@ -82,10 +79,7 @@
   </target>
 
   <target name='copyright' description='Add copyright to top of each source file'>
-    <!--
-    TODO
 		<exec program='Common\Tools\HeaderWriter.exe' />
-    -->
   </target>
 
 
@@ -246,7 +240,6 @@
 				<include name='**\*.ico' />
 				<include name='**\*.gif' />
 				<include name='**\*.cur' />
-				<include name='**\loading_icon' />
 
 				<include name='**\*.doc' />
 				<include name='**\*.pdf' />
@@ -260,7 +253,6 @@
 				<include name='**\*.vcproj' />
 				<include name='**\*.sln' />
 
-				<include name='*.Public.build' />
 				<include name='**\*.targets' />
 				<include name='*.inc' />
 				<include name='Common\**\*.dll' />
@@ -300,7 +292,7 @@
 
   <target name='test'>
     <!--
-    TODO
+    TODO tests are not operational, and we should rewrite them before running within CI procedure
     <nunit2>
       <formatter type="Xml" />
       <test assemblyname="${test.project.name}/bin/${build.config}/${test.project.name}.dll" /> 
