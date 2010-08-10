@@ -6,89 +6,44 @@
     <title>{0}</title>
    <style type="text/css">
         body
-        {{
+        {
             margin: 0px;
             background-color: #FFFFFF;
-        }}
-        body, td, div, p
-        {{
-            font-family: Verdana, Arial, Helvetica, sans-serif;
-            font-size: 12px;
-        }}
-        .header
-        {{
-            text-align: center;
-        }}
-        .headline
-        {{
+            font: 12px, Verdana, Arial, Helvetica, sans-serif;
+        }
+        h1 
+        {
+        	text-align: center;
             color: #78082d;
             font-weight: bold;
             font-size: 16px;
-        }}
-        .subheadline
-        {{
-            font-size: 12px;
-            font-weight: bold;
-        }}
-        .leftBorder
-        {{
-            width: 23px;
-        }}
-        .rightBorder
-        {{
-            width: 2px;
-        }}
+        }
         .contentTable
-        {{
+        {
             width: 650px;
-        }}
+        }
         .contentCell
-        {{
+        {
             padding: 0px 20px 20px;
             width: 623px;
-            border-left:solid 2px #cccccc;
-            border-right:solid 2px #cccccc;
-        }}
+        }
         a
-        {{
+        {
             color: #78082d;
             font-weight: bold;
-        }}
+        }
     </style>
 </head>
 <body>
     <table border="0" cellpadding="0" cellspacing="0" class="contentTable">
         <tbody>
-            <tr>
-                <td colspan="3">
-                    <img src="https://na-b.marketo.com/rs/versionone/images/summer09header.jpg" width="650"
-                        height="120" />
-                </td>
-            </tr>
-            <tr>
-                <td class="leftBorder">
-                </td>
-                <td class="contentCell">
-                    <p class="header">
-                        <span class="headline">
-                            <br />
-                            {0} </span>
-                        <br />
-                    </p>
-                    <p><b>VersionOne Url: {1}</b></p>
-                    {2}
-                    {3}
-                    {4}
-                </td>
-                <td class="rightBorder">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <img src="https://na-b.marketo.com/rs/versionone/images/summer09bottom.jpg" width="650"
-                        height="11" />
-                </td>
-            </tr>
+            <td class="contentCell">
+                <h1>{0}</h1>
+                <p><b>VersionOne Url: {1}</b></p>
+                {2}
+                {3}
+                {4}
+            </td>
         </tbody>
     </table>
 </body>
