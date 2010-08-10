@@ -10,6 +10,9 @@
   <property name='ver.major.minor' value='${ver.major}.${ver.minor}' />
   <property name='build.version' value='${ver.major.minor}' />
 
+  <!-- NOTE NAnt on the server does not support .NET newer than 2.0 -->
+  <property name='msbuild.exe.path' value='C:\WINDOWS\Microsoft.NET\Framework\v3.5\MSBuild.exe'/>
+
   <if test="${property::exists('ver.build')}">
     <property name='build.version' value='${ver.major.minor}.${ver.build}' />
     <if test="${property::exists('ver.revision') and int::parse(ver.revision) > 0}">
@@ -89,10 +92,17 @@
   <!--==COMPILE==-->
 	<target name='compile' description='Compile all projects'>
     <echo message='Building the project...'/>
+    
+    <!-- TODO switch to msbuild task when NAnt is ready to support .NET 3.5
     <msbuild project='${solution.filename}' target='BuildSolution'>
       <property name='Configuration' value='${build.config}'/>
-    </msbuild>
+    </msbuild>-->
     
+    <exec program='${msbuild.exe.path}'>
+      <arg value='${solution.filename}'/>
+      <arg value='/p:Configuration=${build.config}'/>
+    </exec>
+
     <!--
     <copy todir='${bin.dir}' overwrite='true'>
       <fileset basedir='Common'>
