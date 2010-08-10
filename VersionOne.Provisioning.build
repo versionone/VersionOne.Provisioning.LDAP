@@ -2,6 +2,7 @@
 	<property name='project.name' value='${project::get-name()}' />
 	<property name='publish.dir' value='builds' unless="${property::exists('publish.dir')}" />
 	<property name='project.prefix' value='VersionOne.Provisioning'/>
+  <property name='runner.project.name' value='${project.prefix}.Console' />
 	<property name='solution.filename' value='${project.prefix}.sln'/>
 	<property name='test.project.name' value='${project.prefix}.Tests'/>
 
@@ -216,8 +217,8 @@
   
   <target name='package.zip' depends='package.zip.init' description="Pack installer files">
     <zip zipfile='${package.zip.zipfile}' >
-      <fileset basedir='${addin.project.dir}\bin\${build.config}'>
-        <include name='**\*.vsix' />
+      <fileset basedir='${runner.project.name}\bin\${build.config}'>
+        <include name='**\*.*' />
       </fileset>
     </zip>
   </target>
@@ -252,11 +253,9 @@
 				<include name='**\*.config' />
 
 				<include name='**\*.csproj' />
-				<include name='**\*.vcproj' />
 				<include name='**\*.sln' />
 
 				<include name='**\*.targets' />
-				<include name='*.inc' />
 				<include name='Common\**\*.dll' />
 
 				<exclude name='_old\**' />
