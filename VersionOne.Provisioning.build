@@ -167,10 +167,10 @@
   </target>
 
 	<target name='package.source' depends='package.source.init'>
-		<copy file="VersionOne.Provisioning.Console/release.config" tofile="VersionOne.Provisioning.Console/App.config"/>
-		<copy file="VersionOne.Provisioning.LDAP.Tests/release.config" tofile="VersionOne.Provisioning.LDAP.Tests/App.config"/>
-		<copy file="VersionOne.Provisioning.Tests/release.config" tofile="VersionOne.Provisioning.Tests/App.config"/>
-		<copy file="VersionOne.Provisioning.Tests.Email/release.config" tofile="VersionOne.Provisioning.Tests.Email/App.config"/>
+		<copy file="VersionOne.Provisioning.Console/release.config"     tofile="VersionOne.Provisioning.Console/App.config"      overwrite="true" />
+		<copy file="VersionOne.Provisioning.LDAP.Tests/release.config"  tofile="VersionOne.Provisioning.LDAP.Tests/App.config"   overwrite="true" />
+		<copy file="VersionOne.Provisioning.Tests/release.config"       tofile="VersionOne.Provisioning.Tests/App.config"        overwrite="true" />
+ 		<copy file="VersionOne.Provisioning.Tests.Email/release.config" tofile="VersionOne.Provisioning.Tests.Email/App.config"  overwrite="true" />
 		<zip zipfile='${package.source.zipfile}'>
 			<fileset>
 				<include name='**\*.cs' />
