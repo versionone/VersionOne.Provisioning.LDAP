@@ -147,7 +147,7 @@
   </target>
   
   <target name='package.zip' depends='package.zip.init' description="Pack installer files">
-   <copy file="VersionOne.Provisioning.Console/release.config"     tofile="${runner.project.name}\bin\VersionOne.Provisioning.Console.exe.config"      overwrite="true" />
+   <copy file="VersionOne.Provisioning.Console/release.config"     tofile="${runner.project.name}\bin\${build.config}\VersionOne.Provisioning.Console.exe.config"      overwrite="true" />
     <zip zipfile='${package.zip.zipfile}' >
       <fileset basedir='${runner.project.name}\bin\${build.config}'>
         <include name='**\*.*' />
