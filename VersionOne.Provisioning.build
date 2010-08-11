@@ -199,6 +199,8 @@
 				<exclude name='DocSource\**'/>
 				<exclude name='Documentation\**'/>
 				<exclude name='_ReSharper*\**'/>
+				<exclude name='GABEApp.config'/>
+				
 			</fileset>
 		</zip>
 	</target>
