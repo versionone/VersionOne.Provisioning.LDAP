@@ -153,7 +153,7 @@
       <fileset basedir='${runner.project.name}\bin\${build.config}'>
         <include name='**\*.*' />
       </fileset>
-      <fileset basedir='${runner.project.name}'>
+      <fileset>
         <include name='Doc\**\*.*' />
       </fileset>	  
     </zip>
@@ -180,11 +180,7 @@
 				<include name='**\*.gif' />
 				<include name='**\*.cur' />
 
-				<include name='**\*.doc' />
-				<include name='**\*.pdf' />
-				<include name='**\*.rtf' />
-				<include name='**\*.txt' />
-
+				<include name='Doc\**\*.*' />
 				<include name='**\*.xml' />
 				<include name='**\*.config' />
 
