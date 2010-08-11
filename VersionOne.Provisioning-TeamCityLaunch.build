@@ -1,0 +1,21 @@
+<project name='VersionOne.Provisioning-Launch' default='launch-build'>
+
+	<property name='buildnumber' value='0' />
+	<property name='revnumber' value='0' />
+	<if test="${property::exists('build.number')}">
+		<property name='buildnumber' value='${build.number}' />
+	</if>
+
+  <property name='publish.public' value='\\files\Builds\VersionOne.Provisioning\${buildnumber}' />
+
+	<target name='launch-build'>
+		<nant buildfile='.\VersionOne.Provisioning.build' inheritall='true' target='release setversion clean compile test gendoc package publish'>
+			<properties>
+				<property name='ver.build' value='${buildnumber}' readonly='true' />
+				<property name='ver.revision' value='${revnumber}' readonly='true' />
+        <!-- should be uncommented when the build runs smoothly and there is no conflict with CC.NET -->
+				<!-- <property name='publish.dir' value='${publish.public}' readonly='true' /> -->
+			</properties>
+		</nant>
+	</target>
+</project>
