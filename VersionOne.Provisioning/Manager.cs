@@ -201,11 +201,15 @@ namespace VersionOne.Provisioning
             foreach (Asset userinV1 in versionOneUsers)
             {
                 User v1User = new User();
-                v1User.Username = userinV1.GetAttribute(usernameAttribute).Value.ToString().Trim();
-                v1User.V1MemberAsset = userinV1;
-                v1User.CheckInactivate = bool.Parse(userinV1.GetAttribute(ckInactivate).Value.ToString());
-                v1User.IsInactive = bool.Parse(userinV1.GetAttribute(isInactiveAttribute).Value.ToString());
-                v1Usernames.Add(v1User.Username, v1User);
+                object usernameAttributeValue = userinV1.GetAttribute(usernameAttribute).Value;
+                if(null != usernameAttributeValue)
+                {
+                    v1User.Username = usernameAttributeValue.ToString().Trim();
+                    v1User.V1MemberAsset = userinV1;
+                    v1User.CheckInactivate = bool.Parse(userinV1.GetAttribute(ckInactivate).Value.ToString());
+                    v1User.IsInactive = bool.Parse(userinV1.GetAttribute(isInactiveAttribute).Value.ToString());
+                    v1Usernames.Add(v1User.Username, v1User);
+                }
             }
             return v1Usernames;
         }
