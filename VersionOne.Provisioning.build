@@ -9,8 +9,9 @@
   <property name='ver.major' value='8' />
   <property name='ver.minor' value='3' />
   <property name='ver.major.minor' value='${ver.major}.${ver.minor}' />
-  <property name='ver.build' value='${build.number}' />
+<!--   <property name='ver.build' value='${build.number}' />
   <property name='ver.revision' value='1' />
+ -->
   <property name='build.version' value='${ver.major.minor}' />
 
   <!-- NOTE NAnt on the server does not support .NET newer than 2.0 -->
