@@ -9,7 +9,7 @@
   <property name='publish.public' value='\\files\Builds\VersionOne.Provisioning\${buildnumber}' />
 
 	<target name='launch-build'>
-		<nant buildfile='.\VersionOne.Provisioning.build' inheritall='true' target='release setversion clean compile test gendoc package publish'>
+		<nant buildfile='.\VersionOne.Provisioning.build' inheritall='true' target='build-release'>
 			<properties>
 				<property name='ver.build' value='${buildnumber}' readonly='true' />
 				<property name='ver.revision' value='${revnumber}' readonly='true' />
