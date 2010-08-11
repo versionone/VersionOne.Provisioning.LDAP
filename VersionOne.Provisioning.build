@@ -53,7 +53,6 @@
     <call target='copyright' />
     <call target='compile' />
     <call target='test' />
-    <call target='gendoc' />
     <call target='package' />
     <call target='publish' />
   </target>
@@ -135,78 +134,11 @@
 			</fileset>
 		</delete>
 	</target>
-	<!--== GENDOC ==-->
-	<target name='gendoc'>
-    <!--
-    TODO
-		<call target='gendoc.init'/>
-		<call target='gendoc.index'/>
-		<call target='gendoc.content'/>
-    -->
-	</target>
 	
-	<target name='gendoc.init'>
-		<property name='doc.source.dir' value='DocSource'/>
-		<mkdir dir='${doc.output.dir}\Common' />
-		<copy todir='${doc.output.dir}\Common' file='${doc.source.dir}\Common\v1integration.css' />
-	</target>
-	
-	<target name='gendoc.index' description='Generate Documentation' depends='gendoc.init'>
-		<foreach item='File' property='filename'>
-			<in>
-				<items>
-					<include name='${doc.source.dir}\*.xml' />
-				</items>
-			</in>		
-			<do>
-				<property name='filename.noext' value="${path::get-file-name-without-extension(filename)}"/>
-				<exec workingdir='${doc.source.dir}' basedir='Common\docbook\xsltproc\' program='xsltproc.exe' commandline='-o ..\${doc.output.dir}\${filename.noext}.html Common\index.xsl ${filename}' />					
-			</do>
-		</foreach>
-	</target>
-	
-	<target name='gendoc.olink' description='Create target databases for the olink command' depends='gendoc.init'>
-		<property name='collect.xref.targets' value='only'/>
-		<call target='gendoc.content.base'/>
-	</target>
-	
-	<target name='gendoc.content' description='Generate documentation for the content pages' depends='gendoc.init,gendoc.olink'>
-		<property name='collect.xref.targets' value='no'/>	
-		<call target='gendoc.content.base'/>
-	</target>
-	
-	<target name='gendoc.content.base' depends='gendoc.init'>
-		<property name='foldername' value='${doc.source.dir}\VSAddin'/>
-		<property name='content.doc.output.dir' value='${doc.output.dir}\${path::get-file-name(foldername)}'/>
-		<mkdir dir='${content.doc.output.dir}' />
-		<foreach item='File' property='filename'>
-			<in>
-				<items>
-					<include name='${foldername}/*.xml' />
-				</items>
-			</in>
-			<do>
-				<property name='filename.noext' value="${path::get-file-name-without-extension(filename)}"/>
-				<exec workingdir='${foldername}' basedir='Common\docbook\xsltproc\' program='xsltproc.exe' commandline='-o ..\..\${content.doc.output.dir}\${filename.noext}.html --stringparam current.docid ${filename.noext} --stringparam target.database.document ../Common/olinkdb.xml --stringparam collect.xref.targets ${collect.xref.targets} --stringparam targets.filename ../Common/${filename.noext}.db ..\Common\v1integration.xsl ${filename}'  />
-			</do>
-		</foreach>
-		<if test="${collect.xref.targets == 'no'}">
-			<copy todir='${content.doc.output.dir}' overwrite='true'>
-				<fileset basedir='${foldername}'>
-					<include name='*.JPG'/>				
-					<include name='*.GIF'/>				
-				</fileset>
-			</copy>		
-		</if>
-	</target>	
-	
-	<target name='gendoc.clean'>
-		<delete dir='${doc.output.dir}' if='${directory::exists(doc.output.dir)}' failonerror='false' />
-	</target>
 	<!--==PACKAGE==-->	
 	<target name='package' description='Create final package' depends='package.clean'>
 		<call target='package.source' />
-    <call target='package.zip' />
+		<call target='package.zip' />
 	</target>
 
 	<target name='package.clean' depends='package.source.clean, package.zip.clean' />
@@ -221,12 +153,15 @@
       <fileset basedir='${runner.project.name}\bin\${build.config}'>
         <include name='**\*.*' />
       </fileset>
+      <fileset basedir='${runner.project.name}'>
+        <include name='Doc\**\*.*' />
+      </fileset>	  
     </zip>
   </target>
 
 	<target name='package.source.init'>
 		<property name='package.source.zipfile' value='${temp.dir}\${project::get-name()}-Source.${build.version}.zip' />
-    <mkdir dir='${temp.dir}' unless='${directory::exists(temp.dir)}'  />
+		<mkdir dir='${temp.dir}' unless='${directory::exists(temp.dir)}'  />
 	</target>
 
   <target name='package.zip.clean' depends='package.zip.init'>
@@ -280,7 +215,7 @@
 		<copy todir='${publish.dir}' flatten='true' overwrite='true'>
 			<fileset>
 				<include name='${package.source.zipfile}' />
-        <include name='${package.zip.zipfile}'/>
+				<include name='${package.zip.zipfile}'/>
 			</fileset>
 		</copy>
 	</target>
