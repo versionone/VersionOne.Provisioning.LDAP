@@ -14,7 +14,7 @@
 				<property name='ver.build' value='${buildnumber}' readonly='true' />
 				<property name='ver.revision' value='${revnumber}' readonly='true' />
         <!-- should be uncommented when the build runs smoothly and there is no conflict with CC.NET -->
-				<!-- <property name='publish.dir' value='${publish.public}' readonly='true' /> -->
+				<property name='publish.dir' value='${publish.public}' readonly='true' />
 			</properties>
 		</nant>
 	</target>
