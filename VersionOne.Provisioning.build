@@ -36,6 +36,7 @@
 	<property name="doc.output.dir" value="doc"/>
 
   <target name='build-release'>
+  <echo>Release Build number ${ver.build} revision ${ver.revision}</echo>
     <call target='release' />
     <call target='build-common' />
   </target>
