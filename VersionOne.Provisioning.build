@@ -221,12 +221,9 @@
 	</target>
 
   <target name='test'>
-    <!--
-    TODO tests are not operational, and we should rewrite them before running within CI procedure
     <nunit2>
       <formatter type="Xml" />
       <test assemblyname="${test.project.name}/bin/${build.config}/${test.project.name}.dll" /> 
     </nunit2>
-    -->
   </target>
 </project>
