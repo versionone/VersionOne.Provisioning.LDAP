@@ -72,7 +72,7 @@
   </target>
 
   <target name='cleanscc' description='Remove source control bindings from source code'>
-		<exec program='Common\VersionOne.CleanSCC.exe'>
+		<exec program='.\Common\VersionOne.CleanSCC.exe'>
 			<arg value='.' />
 		</exec>
   </target>
