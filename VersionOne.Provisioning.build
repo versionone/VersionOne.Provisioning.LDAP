@@ -4,6 +4,7 @@
 	<property name='project.prefix' value='VersionOne.Provisioning'/>
   <property name='runner.project.name' value='${project.prefix}.Console' />
 	<property name='solution.filename' value='${project.prefix}.sln'/>
+  <!-- there are several test projects for the moment, but we cannot run them all on CI server. Let's start with this one. -->
 	<property name='test.project.name' value='${project.prefix}.Tests'/>
 
   <property name='ver.major' value='8' />
