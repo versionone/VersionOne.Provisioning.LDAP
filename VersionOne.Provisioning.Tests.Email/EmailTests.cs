@@ -2,27 +2,22 @@
 using System.Configuration;
 using System.Net.Mail;
 
-namespace VersionOne.Provisioning.Tests.Email
-{
-    public class EmailTests
-    {
-        
-        public static void Main(string[] args)
-        {
-            SmtpAdaptor smtpAdaptor = GetSmtpAdaptor();
-            smtpAdaptor.SendAdminNotification(new StringCollection(){"addeduser1", "addeduser2"}, new StringCollection(), new StringCollection() );
-            smtpAdaptor.SendAdminNotification(new StringCollection() { "addeduser1", "addeduser2" }, new StringCollection() { "reactivateduser1", "reactivateduser2" }, new StringCollection());
-            smtpAdaptor.SendAdminNotification(new StringCollection() { "addeduser1", "addeduser2" }, new StringCollection() { "reactivateduser1", "reactivateduser2" }, new StringCollection() { "deactivateduser1", "deactivateduser2" });
-            smtpAdaptor.SendAdminNotification(new StringCollection(), new StringCollection() { "reactivateduser1", "reactivateduser2" }, new StringCollection());
-            smtpAdaptor.SendAdminNotification(new StringCollection(), new StringCollection() { "reactivateduser1", "reactivateduser2" }, new StringCollection() { "deactivateduser1", "deactivateduser2" });
-            smtpAdaptor.SendAdminNotification(new StringCollection(), new StringCollection(), new StringCollection() { "deactivateduser1", "deactivateduser2" });
-            smtpAdaptor.SendUserNotification("newuser", "newpassword", "maggie.bullington@versionone.com");
+namespace VersionOne.Provisioning.Tests.Email {
+    public class EmailTests {
+
+        public static void Main(string[] args) {
+            SmtpAdapter smtpAdapter = GetSmtpAdaptor();
+            smtpAdapter.SendAdminNotification(new StringCollection() { "addeduser1", "addeduser2" }, new StringCollection(), new StringCollection());
+            smtpAdapter.SendAdminNotification(new StringCollection() { "addeduser1", "addeduser2" }, new StringCollection() { "reactivateduser1", "reactivateduser2" }, new StringCollection());
+            smtpAdapter.SendAdminNotification(new StringCollection() { "addeduser1", "addeduser2" }, new StringCollection() { "reactivateduser1", "reactivateduser2" }, new StringCollection() { "deactivateduser1", "deactivateduser2" });
+            smtpAdapter.SendAdminNotification(new StringCollection(), new StringCollection() { "reactivateduser1", "reactivateduser2" }, new StringCollection());
+            smtpAdapter.SendAdminNotification(new StringCollection(), new StringCollection() { "reactivateduser1", "reactivateduser2" }, new StringCollection() { "deactivateduser1", "deactivateduser2" });
+            smtpAdapter.SendAdminNotification(new StringCollection(), new StringCollection(), new StringCollection() { "deactivateduser1", "deactivateduser2" });
+            smtpAdapter.SendUserNotification("newuser", "newpassword", "golova@shitmail.me");
         }
 
-        private static SmtpAdaptor GetSmtpAdaptor()
-        {
-            UserNotificationEmail userNotificationEmail = new UserNotificationEmail
-            {
+        private static SmtpAdapter GetSmtpAdaptor() {
+            UserNotificationEmail userNotificationEmail = new UserNotificationEmail {
                 AdminEmail =
                     ConfigurationManager.AppSettings["adminEmail"],
                 AdminFullName =
@@ -35,8 +30,7 @@ namespace VersionOne.Provisioning.Tests.Email
                 VersionOneUrl =
                     ConfigurationManager.AppSettings["V1Instance"]
             };
-            AdminNotificationEmail adminNotificationEmail = new AdminNotificationEmail
-            {
+            AdminNotificationEmail adminNotificationEmail = new AdminNotificationEmail {
                 AdminEmail =
                     ConfigurationManager.AppSettings["adminEmail"],
                 BodyTemplate =
@@ -59,7 +53,7 @@ namespace VersionOne.Provisioning.Tests.Email
 
             SmtpClient smtpClient = new SmtpClient();
             smtpClient.EnableSsl = bool.Parse(ConfigurationManager.AppSettings["smtpEnableSSL"]);
-            return new SmtpAdaptor(userNotificationEmail, adminNotificationEmail, smtpClient);
+            return new SmtpAdapter(userNotificationEmail, adminNotificationEmail, smtpClient);
 
         }
 

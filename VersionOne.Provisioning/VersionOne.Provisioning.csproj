@@ -59,9 +59,10 @@
   <ItemGroup>
     <Compile Include="DirectoryUser.cs" />
     <Compile Include="Factory.cs" />
+    <Compile Include="ISmtpAdapter.cs" />
     <Compile Include="IUserDirectoryReader.cs" />
     <Compile Include="Manager.cs" />
-    <Compile Include="SmtpAdaptor.cs" />
+    <Compile Include="SmtpAdapter.cs" />
     <Compile Include="User.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils.cs" />
