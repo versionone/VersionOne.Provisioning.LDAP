@@ -72,12 +72,9 @@
   </target>
 
   <target name='cleanscc' description='Remove source control bindings from source code'>
-    <!--
-    TODO
 		<exec program='Common\VersionOne.CleanSCC.exe'>
 			<arg value='.' />
 		</exec>
-		-->
   </target>
 
   <target name='copyright' description='Add copyright to top of each source file'>
@@ -98,14 +95,6 @@
       <arg value='${solution.filename}'/>
       <arg value='/p:Configuration=${build.config}'/>
     </exec>
-
-    <!--
-    <copy todir='${bin.dir}' overwrite='true'>
-      <fileset basedir='Common'>
-        <include name='VersionOne.SDK.APIClient.dll.config'/>
-      </fileset>
-    </copy>
-    -->
   </target>
 
 	<target name='compile.clean'>
