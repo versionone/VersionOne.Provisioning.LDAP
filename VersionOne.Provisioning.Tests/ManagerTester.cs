@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Configuration;
 using NUnit.Framework;
 using Rhino.Mocks;
 using VersionOne.SDK.APIClient;
@@ -39,7 +40,7 @@ namespace VersionOne.Provisioning.Tests {
         public void GetDirectoryUsersTest() {
             IList<DirectoryUser> directoryUsers = new List<DirectoryUser>();
             DirectoryUser dirUser = new DirectoryUser();
-            const string userName = "User";
+            string userName = "User";
             const string email = "test@mail.com";
             const string fullName = "TestUser";
 
@@ -52,6 +53,9 @@ namespace VersionOne.Provisioning.Tests {
             mockRepository.ReplayAll();
             IDictionary<string, User> users = managerMock.GetDirectoryUsers();
 
+            if (ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true")) {
+                userName = "\\" + userName;
+            }
             Assert.IsNotEmpty((ICollection) users.Keys);
             Assert.AreEqual(users.Keys.Count, 1);
             Assert.IsTrue(users.Keys.Contains(userName));
