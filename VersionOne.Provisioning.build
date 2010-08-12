@@ -177,6 +177,8 @@
 				<include name='**\*.xml' />
 				<include name='**\*.config' />
 
+				<include name='**\*.html' />
+
 				<include name='**\*.csproj' />
 				<include name='**\*.sln' />
 
