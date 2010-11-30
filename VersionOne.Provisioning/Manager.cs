@@ -57,9 +57,10 @@ namespace VersionOne.Provisioning {
 
                     if (!users.ContainsKey(userName)) {
                         User user = new User();
-                        if (UseIntegratedAuthorization())
+                        if (UseIntegratedAuthorization()) {
                             user.Username = string.Format("{0}\\{1}", Domain, directoryUser.Username);
-                        else {
+                            userName = string.Format("{0}\\{1}", Domain, userName);
+                        }  else {
                             user.Username = directoryUser.Username;
                         }
                         user.FullName = directoryUser.FullName;

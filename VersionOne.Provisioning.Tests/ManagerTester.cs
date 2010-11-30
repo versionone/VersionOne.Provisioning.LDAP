@@ -53,11 +53,11 @@ namespace VersionOne.Provisioning.Tests {
             mockRepository.ReplayAll();
             IDictionary<string, User> users = managerMock.GetDirectoryUsers();
 
-            if (ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true")) {
-                userName = "\\" + userName;
-            }
-
             string userNameCI = userName.ToLowerInvariant();
+
+            if (ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true")) {
+                userNameCI = "\\" + userNameCI;
+            }
 
             Assert.IsNotEmpty((ICollection) users.Keys);
             Assert.AreEqual(users.Keys.Count, 1);
