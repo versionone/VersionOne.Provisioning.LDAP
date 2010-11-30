@@ -34,8 +34,8 @@ namespace VersionOne.Provisioning.Tests {
 
         [Test]
         public void TestCompareUsers() {
-            IDictionary<string, User> usersFromLdap = testUserFactory.CreateTestLdapUsers();
-            IDictionary<string, User> usersFromV1 = testUserFactory.CreateTestV1Users();
+            IDictionary<string, User> usersFromLdap = testUserFactory.CreateTestLdapUsers(false);
+            IDictionary<string, User> usersFromV1 = testUserFactory.CreateTestV1Users(false);
             Assert.AreEqual(5, usersFromLdap.Count); //make sure the usersFromLdap List was populated correctly
 
             Assert.AreEqual(4, usersFromV1.Count);  //make sure the V1 users List was populated correctly
@@ -45,17 +45,78 @@ namespace VersionOne.Provisioning.Tests {
             Assert.AreEqual(5, usersToAction.Count);
 
             foreach (User user in usersToAction) {
-                if (user.Username == "abe") {
+                string userName = user.Username;
+
+                CheckUser(user, userName);
+            }
+        }
+
+        [Test]
+        public void TestCompareUsersIgnoreCaseLdapUpper() {
+            IDictionary<string, User> usersFromLdap = testUserFactory.CreateTestLdapUsers(true);
+            Assert.AreEqual(5, usersFromLdap.Count);
+
+            IDictionary<string, User> usersFromV1 = testUserFactory.CreateTestV1Users(false);
+            Assert.AreEqual(4, usersFromV1.Count);
+
+            IList<User> usersToAction = manager.CompareUsers(usersFromLdap, usersFromV1);
+            Assert.AreEqual(5, usersToAction.Count);
+            
+            foreach (User user in usersToAction) {
+                string userName = user.Username.ToLowerInvariant();
+
+                CheckUser(user, userName);
+            }
+        }
+
+        [Test]
+        public void TestCompareUsersIgnoreCaseV1Upper() {
+            IDictionary<string, User> usersFromLdap = testUserFactory.CreateTestLdapUsers(false);
+            Assert.AreEqual(5, usersFromLdap.Count);
+
+            IDictionary<string, User> usersFromV1 = testUserFactory.CreateTestV1Users(true);
+            Assert.AreEqual(4, usersFromV1.Count);
+
+            IList<User> usersToAction = manager.CompareUsers(usersFromLdap, usersFromV1);
+            Assert.AreEqual(5, usersToAction.Count);
+            
+            foreach (User user in usersToAction) {
+                string userName = user.Username.ToLowerInvariant();
+
+                CheckUser(user, userName);
+            }
+        }
+
+        private static void CheckUser(User user, string userName) {
+            switch (userName) {
+                case "abe":
                     Assert.IsTrue(user.Create);
-                } else if (user.Username == "ben") {
+                    Assert.IsFalse(user.Reactivate);
+                    Assert.IsFalse(user.Deactivate);
+                    break;
+                case "ben":
                     Assert.IsTrue(user.Create);
-                } else if (user.Username == "cam") {
+                    Assert.IsFalse(user.Reactivate);
+                    Assert.IsFalse(user.Deactivate);
+                    break;
+                case "cam":
                     Assert.IsTrue(user.Create);
-                } else if (user.Username == "val") {
+                    Assert.IsFalse(user.Reactivate);
+                    Assert.IsFalse(user.Deactivate);
+                    break;
+                case "val":
+                    Assert.IsFalse(user.Create);
                     Assert.IsTrue(user.Reactivate);
-                } else if (user.Username == "tom") {
+                    Assert.IsFalse(user.Deactivate);
+                    break;
+                case "tom":
+                    Assert.IsFalse(user.Create);
+                    Assert.IsFalse(user.Reactivate);
                     Assert.IsTrue(user.Deactivate);
-                }
+                    break;
+                default:
+                    Assert.Fail("Unexpected user in the list");
+                    break;
             }
         }
 

@@ -53,7 +53,9 @@ namespace VersionOne.Provisioning {
                 string Domain = ConfigurationManager.AppSettings["ldapDomain"];
                 //Get the Ldapuser data into a Provisioning.User collection.
                 foreach (DirectoryUser directoryUser in directoryUsers) {
-                    if (!users.ContainsKey(directoryUser.Username)) {
+                    string userName = directoryUser.Username.ToLowerInvariant();
+
+                    if (!users.ContainsKey(userName)) {
                         User user = new User();
                         if (UseIntegratedAuthorization())
                             user.Username = string.Format("{0}\\{1}", Domain, directoryUser.Username);
@@ -63,8 +65,7 @@ namespace VersionOne.Provisioning {
                         user.FullName = directoryUser.FullName;
                         user.Email = directoryUser.Email;
                         user.Nickname = directoryUser.Nickname;
-                        users.Add(user.Username, user);
-
+                        users.Add(userName, user);
 
                         logger.Debug("Member retrieved from directory: " + user.Username);
                     } else {
@@ -89,8 +90,10 @@ namespace VersionOne.Provisioning {
 
             //Look for a match using directory as the master list...
             foreach (User directoryUser in directoryUsers.Values) {
-                if (versionOneUsers.ContainsKey(directoryUser.Username)) {
-                    User userInV1 = versionOneUsers[directoryUser.Username];
+                string directoryUserName = directoryUser.Username.ToLowerInvariant();
+
+                if (versionOneUsers.ContainsKey(directoryUserName)) {
+                    User userInV1 = versionOneUsers[directoryUserName];
                     if (userInV1.IsInactive) {
                         //This LDAP user is in V1, but is inactive,
                         //so it needs to be reactivated in V1.
@@ -109,7 +112,9 @@ namespace VersionOne.Provisioning {
 
             //Look for a match using V1 as the master list...           
             foreach (User userInV1 in versionOneUsers.Values) {
-                if (!directoryUsers.ContainsKey(userInV1.Username)) {
+                string v1UserName = userInV1.Username.ToLowerInvariant();
+
+                if (!directoryUsers.ContainsKey(v1UserName)) {
                     if (userInV1.CheckInactivate && userInV1.V1MemberAsset.Oid.Token != V1Constants.DEFAULTADMINOID) {
                         //This V1 user is not in Ldap, but is active in V1, 
                         //so it needs to be deactivated in V1.
@@ -168,13 +173,13 @@ namespace VersionOne.Provisioning {
             foreach (Asset userinV1 in versionOneUsers) {
                 User v1User = new User();
                 object usernameAttributeValue = userinV1.GetAttribute(usernameAttribute).Value;
-                if(null != usernameAttributeValue)
-                {
+
+                if (usernameAttributeValue != null) {
                     v1User.Username = usernameAttributeValue.ToString().Trim();
                     v1User.V1MemberAsset = userinV1;
                     v1User.CheckInactivate = bool.Parse(userinV1.GetAttribute(ckInactivate).Value.ToString());
                     v1User.IsInactive = bool.Parse(userinV1.GetAttribute(isInactiveAttribute).Value.ToString());
-                    v1Usernames.Add(v1User.Username, v1User);
+                    v1Usernames.Add(v1User.Username.ToLowerInvariant(), v1User);
                 }
             }
             return v1Usernames;

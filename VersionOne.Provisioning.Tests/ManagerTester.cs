@@ -56,11 +56,14 @@ namespace VersionOne.Provisioning.Tests {
             if (ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true")) {
                 userName = "\\" + userName;
             }
+
+            string userNameCI = userName.ToLowerInvariant();
+
             Assert.IsNotEmpty((ICollection) users.Keys);
             Assert.AreEqual(users.Keys.Count, 1);
-            Assert.IsTrue(users.Keys.Contains(userName));
-            Assert.AreEqual(users[userName].Email, email);
-            Assert.AreEqual(users[userName].FullName, fullName);
+            Assert.IsTrue(users.Keys.Contains(userNameCI));
+            Assert.AreEqual(users[userNameCI].Email, email);
+            Assert.AreEqual(users[userNameCI].FullName, fullName);
 
             mockRepository.VerifyAll();
         }

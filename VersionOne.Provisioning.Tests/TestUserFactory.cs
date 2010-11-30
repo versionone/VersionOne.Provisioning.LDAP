@@ -13,12 +13,20 @@ namespace VersionOne.Provisioning.Tests
             model = v1.Model;
         }
 
-        public IDictionary<string, User> CreateTestV1Users() {
+        public IDictionary<string, User> CreateTestV1Users(bool isInUpperCase) {
             IDictionary<string, User> testV1Users = new Dictionary<string, User>();
-            testV1Users.Add("jim", CreateTestV1User("jim", true));
-            testV1Users.Add("sam", CreateTestV1User("sam", false));
-            testV1Users.Add("tom", CreateTestV1User("tom", false));
-            testV1Users.Add("val", CreateTestV1User("val", true));
+
+            testV1Users.Add("jim",
+                CreateTestV1User(isInUpperCase ? "jim".ToUpperInvariant() : "jim", true));
+
+            testV1Users.Add("sam", 
+                CreateTestV1User(isInUpperCase ? "sam".ToUpperInvariant() : "sam", false));
+
+            testV1Users.Add("tom", 
+                CreateTestV1User(isInUpperCase ? "tom".ToUpperInvariant() : "tom", false));
+
+            testV1Users.Add("val", 
+                CreateTestV1User(isInUpperCase ? "val".ToUpperInvariant() : "val", true));
 
             return testV1Users;
         }
@@ -32,15 +40,15 @@ namespace VersionOne.Provisioning.Tests
             return user;
         }
 
-        public IDictionary<string, User> CreateTestLdapUsers() {
+        public IDictionary<string, User> CreateTestLdapUsers(bool isInUpperCase) {
             IDictionary<string, User> users = new Dictionary<string, User>();
 
             string[] testUsers = {"abe", "ben", "cam", "sam", "val"};
 
             for (int i = 0; i < testUsers.Length; i++) {
-                string username = testUsers[i];
+                string username = isInUpperCase ? testUsers[i].ToUpperInvariant() : testUsers[i];
                 User user = CreateTestUser(username);
-                users.Add(user.Username, user);
+                users.Add(testUsers[i], user);
             }
             return users;
         }
