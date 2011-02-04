@@ -21,29 +21,27 @@ namespace VersionOne.Provisioning {
             string useIntegratedAuth = ConfigurationManager.AppSettings["IntegratedAuth"];
 
             try {
-                IAPIConnector metaConn;
-                IAPIConnector dataConn;
+                IAPIConnector metaConnector;
+                IAPIConnector dataConnector;
                 bool useIntegrated = useIntegratedAuth.Equals("true");
-                logger.Info("Attaching to version one at: " + V1Instance);
-                //Added to work with a proxy
-                if (!String.IsNullOrEmpty(proxyServerUri)) {
-                    WebProxyBuilder proxyBuilder = new WebProxyBuilder();
-                    WebProxy webProxy = proxyBuilder.Build(proxyServerUri, proxyUsername, proxyPassword, proxyDomain);
-                    metaConn = new V1APIConnector(V1Instance + @"meta.v1/", webProxy);
-                    dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", 
-                                                  V1Login, V1Password, useIntegrated, webProxy);
+                logger.Info("Attaching to VersionOne at: " + V1Instance);
+                
+                if (!string.IsNullOrEmpty(proxyServerUri)) {
+                    Uri proxyUri = new Uri(proxyServerUri);
+                    ProxyProvider proxyProvider = new ProxyProvider(proxyUri, proxyUsername, proxyPassword, proxyDomain);
+                    metaConnector = new V1APIConnector(V1Instance + @"meta.v1/", null, null, false, proxyProvider);
+                    dataConnector = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password, useIntegrated, proxyProvider);
                 } else {
-                    metaConn = new V1APIConnector(V1Instance + @"meta.v1/");
-                    dataConn = new V1APIConnector(V1Instance + @"rest-1.v1/", 
-                                                  V1Login, V1Password, useIntegrated);
+                    metaConnector = new V1APIConnector(V1Instance + @"meta.v1/");
+                    dataConnector = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password, useIntegrated);
                 }
 
-                IMetaModel metaModel = new MetaModel(metaConn);
-                IServices services = new Services(metaModel, dataConn);
+                IMetaModel metaModel = new MetaModel(metaConnector);
+                IServices services = new Services(metaModel, dataConnector);
                 return new V1Instance(services, metaModel, defaultRole);
-            } catch (Exception error) {
-                logger.Error(error.Message);
-                throw (error);
+            } catch(Exception ex) {
+                logger.Error(ex.Message);
+                throw ex;
             }
         }
 
@@ -72,7 +70,7 @@ namespace VersionOne.Provisioning {
                 };
 
             SmtpClient smtpClient = new SmtpClient();
-            smtpClient.EnableSsl = Boolean.Parse(ConfigurationManager.AppSettings["smtpEnableSSL"]);
+            smtpClient.EnableSsl = bool.Parse(ConfigurationManager.AppSettings["smtpEnableSSL"]);
             return new SmtpAdapter(userNotificationEmail, adminNotificationEmail, smtpClient);
         }
 
@@ -80,13 +78,9 @@ namespace VersionOne.Provisioning {
             bool validV1Config = CheckVersionOneSettings();
             bool validLDAPConfig = CheckLDAPSettings();
 
-            if ((!validV1Config) || (!validLDAPConfig)) {
-                Exception error = new Exception("There are errors in the configuration. "
-                                                +" Please check the application log for more information");
-                throw error;
+            if(!validV1Config || !validLDAPConfig) {
+                throw new Exception("There are errors in the configuration. Please check the application log for more information");
             }
-
-
         }
 
         private static bool CheckLDAPSettings() {
@@ -94,10 +88,13 @@ namespace VersionOne.Provisioning {
             string[] values = {"ldapGroupMemberAttribute",  "ldapServerPath",   "ldapGroupDN",
                                "maptoV1Username",           "maptoV1Fullname",  "mapToV1Email",
                                "mapToV1Nickname",           "useDefaultLDAPCredentials" };
+            
             foreach (string entry in values) {
-                if (!CheckForEmptyValue(entry))
+                if (!CheckForEmptyValue(entry)) {
                     success = false;
+                }
             }
+
             return success;
         }
 
@@ -105,14 +102,11 @@ namespace VersionOne.Provisioning {
             bool success = true;
             logger.Info("Checking VersionOne Settings");
 
-            if (!CheckForEmptyValue("V1UserDefaultRole")) {
+            if(!CheckForEmptyValue("V1UserDefaultRole") || !CheckConnectionValid()) {
                 success = false;
             }
-            if (!CheckConnectionValid()) {
-                success = false;
-            }
-            return success;
 
+            return success;
         }
 
         public static bool CheckConnectionValid() {
@@ -123,28 +117,24 @@ namespace VersionOne.Provisioning {
             bool useIntegrated = ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true");
             V1ConnectionValidator connectionValidator = 
                 new V1ConnectionValidator(connectionAddress, userName, userPassword, useIntegrated);
+            
             try {
                 connectionValidator.Test();
-
-            } catch (Exception error) {
-
+            } catch (Exception ex) {
                 success = false;
-                logger.Error(error.Message);
+                logger.Error(ex.Message);
             }
 
             return success;
         }
-
 
         private static bool CheckForEmptyValue(string key) {
             if (ConfigurationManager.AppSettings[key].Length == 0) {
                 logger.Error("Application Config error: " + key + " can not be empty");
                 return false;
             }
+
             return true;
         }
-
-
-
     }
 }
