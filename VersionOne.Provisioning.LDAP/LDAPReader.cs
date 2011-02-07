@@ -5,10 +5,8 @@ using System.DirectoryServices;
 using NLog;
 using VersionOne.Provisioning;
 
-namespace VersionOne.Provisioning.LDAP
-{
-    public class LDAPReader : IUserDirectoryReader
-    {
+namespace VersionOne.Provisioning.LDAP {
+    public class LDAPReader : IUserDirectoryReader {
         private string groupMemberAttribute;
         private string username;
         private string password;
@@ -22,12 +20,11 @@ namespace VersionOne.Provisioning.LDAP
         private string groupDN;
         private string fullPath;
 
-        public void Initialize(NameValueCollection appSettings)
-        {
-            if (appSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE")
-            {
+        public void Initialize(NameValueCollection appSettings) {
+            if (appSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE") {
                 useDefaultCredentials = true;
             }
+
             root = @"LDAP://" + appSettings["ldapServerPath"] + @"/";
             groupMemberAttribute = appSettings["ldapGroupMemberAttribute"];
             username = appSettings["ldapUsername"];
@@ -40,16 +37,13 @@ namespace VersionOne.Provisioning.LDAP
             fullPath = root + groupDN;
         }
 
-        public IList<DirectoryUser> GetUsers()
-        {
+        public IList<DirectoryUser> GetUsers() {
             IList<DirectoryUser> ldapUsersList = new List<DirectoryUser>();
-            DirectoryEntry group = GetDirectoryEntry(fullPath, new [] {groupMemberAttribute});
+            DirectoryEntry group = GetDirectoryEntry(fullPath, new[] { groupMemberAttribute });
             PropertyValueCollection memberPaths = GetMemberPaths(group);
 
-            foreach (string memberPath in memberPaths)
-            {
-                try
-                {
+            foreach (string memberPath in memberPaths) {
+                try {
                     DirectoryUser user = new DirectoryUser();
                     DirectoryEntry member = GetMember(memberPath);
                     SetUsername(user, member);
@@ -57,109 +51,84 @@ namespace VersionOne.Provisioning.LDAP
                     SetEmail(user, member);
                     SetNickname(user, member);
                     ldapUsersList.Add(user);
-                } catch(Exception ex)
-                {
+                } catch (Exception ex) {
                     logger.ErrorException("Unable to read member from ldap, path: " + memberPath, ex);
                 }
             }
-            if(memberPaths.Count < 1)
-            {
+
+            if (memberPaths.Count < 1) {
                 logger.Warn("No members were returned from group: " + fullPath + ", group member attribute name: '" + groupMemberAttribute);
             }
+            
             return ldapUsersList;
         }
 
-        private DirectoryEntry GetDirectoryEntry(string fullPath, string[] propertiesToLoad)
-        {
-            try
-            {
+        private DirectoryEntry GetDirectoryEntry(string fullPath, string[] propertiesToLoad) {
+            try {
                 DirectoryEntry entry;
-                if (useDefaultCredentials)
-                {
+                if (useDefaultCredentials) {
                     entry = new DirectoryEntry(fullPath);
-                }
-                else
-                {
+                } else {
                     entry = new DirectoryEntry(fullPath, username, password);
                 }
                 entry.AuthenticationType = AuthenticationTypes.ServerBind;
                 entry.RefreshCache(propertiesToLoad);
                 return entry;
-            } catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 logger.ErrorException("Unable access ldap, path: " + fullPath + "', username: '" + username + "', use default credentials: '" + useDefaultCredentials + "'", ex);
                 throw;
             }
         }
 
-        private void SetNickname(DirectoryUser user, DirectoryEntry member)
-        {
-            try{
-            user.Nickname = member.Properties[mapNickname][0].ToString(); //nickname
-            }
-            catch (Exception ex)
-            {
+        private void SetNickname(DirectoryUser user, DirectoryEntry member) {
+            try {
+                user.Nickname = member.Properties[mapNickname][0].ToString(); //nickname
+            } catch (Exception ex) {
                 logger.ErrorException("Unable to get nickname property for member: " + member.Path + ", nickname property name: " + mapNickname, ex);
                 throw;
             }
         }
 
-        private void SetEmail(DirectoryUser user, DirectoryEntry member)
-        {
-            try
-            {
+        private void SetEmail(DirectoryUser user, DirectoryEntry member) {
+            try {
                 user.Email = member.Properties[mapEmail][0].ToString(); //email
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 logger.ErrorException("Unable to get email property for member: " + member.Path + ", email property name: " + mapEmail, ex);
                 throw;
             }
         }
 
-        private void SetFullName(DirectoryUser user, DirectoryEntry member)
-        {
-            try{
-            user.FullName = member.Properties[mapFullname][0].ToString(); //fullname
-            }
-            catch (Exception ex)
-            {
+        private void SetFullName(DirectoryUser user, DirectoryEntry member) {
+            try {
+                user.FullName = member.Properties[mapFullname][0].ToString(); //fullname
+            } catch (Exception ex) {
                 logger.ErrorException("Unable to get fullname property for member: " + member.Path + ", fullname property name: " + mapFullname, ex);
                 throw;
             }
         }
 
-        private void SetUsername(DirectoryUser user, DirectoryEntry member)
-        {
-            try
-            {
+        private void SetUsername(DirectoryUser user, DirectoryEntry member) {
+            try {
                 user.Username = member.Properties[mapUsername][0].ToString(); //username
-            } catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 logger.ErrorException("Unable to get username property for member: " + member.Path + ", username property name: " + mapUsername, ex);
                 throw;
             }
         }
 
-        private DirectoryEntry GetMember(string memberPath)
-        {
-            try
-            {
-                return GetDirectoryEntry(root + memberPath, new [] {mapUsername, mapFullname, mapEmail, mapNickname});
-            }catch(Exception ex)
-            {
+        private DirectoryEntry GetMember(string memberPath) {
+            try {
+                return GetDirectoryEntry(root + memberPath, new[] { mapUsername, mapFullname, mapEmail, mapNickname });
+            } catch (Exception ex) {
                 logger.ErrorException("Unable to get directory entry for member, path: " + root + memberPath + ", username: " + username, ex);
                 throw;
             }
         }
 
-        private PropertyValueCollection GetMemberPaths(DirectoryEntry group)
-        {
-            try
-            {
+        private PropertyValueCollection GetMemberPaths(DirectoryEntry group) {
+            try {
                 return group.Properties[groupMemberAttribute];
-            }catch(Exception ex)
-            {
+            } catch (Exception ex) {
                 logger.ErrorException("Unable to get group member property for group: " + group.Path + ", group member property name: " + groupMemberAttribute, ex);
                 throw;
             }
