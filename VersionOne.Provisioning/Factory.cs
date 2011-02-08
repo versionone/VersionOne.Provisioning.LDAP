@@ -14,9 +14,6 @@ namespace VersionOne.Provisioning {
             string V1Login = ConfigurationManager.AppSettings["V1InstanceUsername"];
             string V1Password = ConfigurationManager.AppSettings["V1InstancePassword"];
             string proxyServerUri = ConfigurationManager.AppSettings["proxyServerUri"];
-            string proxyUsername = ConfigurationManager.AppSettings["proxyUsername"];
-            string proxyPassword = ConfigurationManager.AppSettings["proxyPassword"];
-            string proxyDomain = ConfigurationManager.AppSettings["proxyDomain"];
             string defaultRole = ConfigurationManager.AppSettings["V1UserDefaultRole"];
             string useIntegratedAuth = ConfigurationManager.AppSettings["IntegratedAuth"];
 
@@ -27,8 +24,7 @@ namespace VersionOne.Provisioning {
                 logger.Info("Attaching to VersionOne at: " + V1Instance);
                 
                 if (!string.IsNullOrEmpty(proxyServerUri)) {
-                    Uri proxyUri = new Uri(proxyServerUri);
-                    ProxyProvider proxyProvider = new ProxyProvider(proxyUri, proxyUsername, proxyPassword, proxyDomain);
+                    ProxyProvider proxyProvider = GetProxyProvider();
                     metaConnector = new V1APIConnector(V1Instance + @"meta.v1/", null, null, false, proxyProvider);
                     dataConnector = new V1APIConnector(V1Instance + @"rest-1.v1/", V1Login, V1Password, useIntegrated, proxyProvider);
                 } else {
@@ -83,6 +79,15 @@ namespace VersionOne.Provisioning {
             }
         }
 
+        private static ProxyProvider GetProxyProvider() {
+            string proxyServerUri = ConfigurationManager.AppSettings["proxyServerUri"];
+            string proxyUsername = ConfigurationManager.AppSettings["proxyUsername"];
+            string proxyPassword = ConfigurationManager.AppSettings["proxyPassword"];
+            string proxyDomain = ConfigurationManager.AppSettings["proxyDomain"];
+
+            return new ProxyProvider(new Uri(proxyServerUri), proxyUsername, proxyPassword, proxyDomain);
+        }
+
         private static bool CheckLDAPSettings() {
             bool success = true;
             string[] values = {"ldapGroupMemberAttribute",  "ldapServerPath",   "ldapGroupDN",
@@ -110,14 +115,23 @@ namespace VersionOne.Provisioning {
         }
 
         public static bool CheckConnectionValid() {
+            string proxyServerUri = ConfigurationManager.AppSettings["proxyServerUri"];
+
             bool success = true;
             string connectionAddress = ConfigurationManager.AppSettings["V1Instance"];
             string userName = ConfigurationManager.AppSettings["V1InstanceUsername"];
             string userPassword = ConfigurationManager.AppSettings["V1InstancePassword"];
             bool useIntegrated = ConfigurationManager.AppSettings["IntegratedAuth"].Equals("true");
-            V1ConnectionValidator connectionValidator = 
-                new V1ConnectionValidator(connectionAddress, userName, userPassword, useIntegrated);
             
+            V1ConnectionValidator connectionValidator;
+            
+            if(!string.IsNullOrEmpty(proxyServerUri)) {
+                var proxyProvider = GetProxyProvider();
+                connectionValidator = new V1ConnectionValidator(connectionAddress, userName, userPassword, useIntegrated, proxyProvider);
+            } else {
+                connectionValidator = new V1ConnectionValidator(connectionAddress, userName, userPassword, useIntegrated);
+            }
+
             try {
                 connectionValidator.Test();
             } catch (Exception ex) {
