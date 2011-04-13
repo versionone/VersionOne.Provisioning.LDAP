@@ -17,6 +17,9 @@ namespace VersionOne.Provisioning {
             string defaultRole = ConfigurationManager.AppSettings["V1UserDefaultRole"];
             string useIntegratedAuth = ConfigurationManager.AppSettings["IntegratedAuth"];
 
+            if(!V1Instance.EndsWith("/"))
+                V1Instance += "/";
+
             try {
                 IAPIConnector metaConnector;
                 IAPIConnector dataConnector;
