@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*(c) Copyright 2011, VersionOne, Inc. All rights reserved. (c)*/
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
@@ -50,19 +51,14 @@ namespace VersionOne.Provisioning {
                 IList<DirectoryUser> directoryUsers = _directoryReader.GetUsers();
 
                 logger.Info(directoryUsers.Count + " directory members retrieved.");
-                string Domain = ConfigurationManager.AppSettings["ldapDomain"];
+                
                 //Get the Ldapuser data into a Provisioning.User collection.
                 foreach (DirectoryUser directoryUser in directoryUsers) {
                     string userName = directoryUser.Username.ToLowerInvariant();
 
                     if (!users.ContainsKey(userName)) {
                         User user = new User();
-                        if (UseIntegratedAuthorization()) {
-                            user.Username = string.Format("{0}\\{1}", Domain, directoryUser.Username);
-                            userName = string.Format("{0}\\{1}", Domain, userName);
-                        }  else {
-                            user.Username = directoryUser.Username;
-                        }
+                        user.Username = directoryUser.Username;
                         user.FullName = directoryUser.FullName;
                         user.Email = directoryUser.Email;
                         user.Nickname = directoryUser.Nickname;

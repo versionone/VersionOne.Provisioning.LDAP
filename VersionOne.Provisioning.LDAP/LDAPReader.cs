@@ -1,7 +1,9 @@
-﻿using System;
+﻿/*(c) Copyright 2011, VersionOne, Inc. All rights reserved. (c)*/
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.DirectoryServices;
+using System.DirectoryServices.ActiveDirectory;
 using NLog;
 using VersionOne.Provisioning;
 
@@ -19,6 +21,8 @@ namespace VersionOne.Provisioning.LDAP {
         private string root;
         private string groupDN;
         private string fullPath;
+        private bool useIntegratedAuth;
+        private string domain;
 
         public void Initialize(NameValueCollection appSettings) {
             if (appSettings["useDefaultLDAPCredentials"].Trim().ToUpper() != "FALSE") {
@@ -35,6 +39,8 @@ namespace VersionOne.Provisioning.LDAP {
             mapNickname = appSettings["mapToV1Nickname"];
             groupDN = appSettings["ldapGroupDN"];
             fullPath = root + groupDN;
+            useIntegratedAuth = Convert.ToBoolean(appSettings["IntegratedAuth"]);
+            domain = appSettings["ldapDomain"];
         }
 
         public IList<DirectoryUser> GetUsers() {
@@ -108,9 +114,12 @@ namespace VersionOne.Provisioning.LDAP {
         }
 
         private void SetUsername(DirectoryUser user, DirectoryEntry member) {
-            try {
-                user.Username = member.Properties[mapUsername][0].ToString(); //username
-            } catch (Exception ex) {
+            try
+            {
+                string directoryUsername = member.Properties[mapUsername][0].ToString(); //username
+                user.Username = useIntegratedAuth ? string.Format("{0}\\{1}", domain, directoryUsername) : directoryUsername;
+            }
+            catch (Exception ex) {
                 logger.ErrorException("Unable to get username property for member: " + member.Path + ", username property name: " + mapUsername, ex);
                 throw;
             }
