@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionOne.Provisioning", "VersionOne.Provisioning\VersionOne.Provisioning.csproj", "{9D08EB2C-E06D-424C-8CC2-EEAEA3FC5497}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionOne.Provisioning.LDAP", "VersionOne.Provisioning.LDAP\VersionOne.Provisioning.LDAP.csproj", "{D347843E-F5DE-42BB-9D5D-86237495ECBD}"
