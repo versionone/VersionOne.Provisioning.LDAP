@@ -29,7 +29,7 @@
             {
                 "date": "2011-07-01T00:00:00.000Z",
                 "description": "Summer 2011",
-                "version": "62",
+                "version": "1.0.2.62",
                 "releaseNotes": "Updated: Integration depends on the latest SDK",
                 "qualityBand": "mature",
                 "downloadUrl": "http://platform.versionone.com.s3.amazonaws.com/downloads/VersionOne.Provisioning.zip"
@@ -37,14 +37,14 @@
             {
                 "date": "2010-12-06T00:00:00.000Z",
                 "description": "Winter 2010",
-                "version": "53",
+                "version": "1.0.1.53",
                 "releaseNotes": "Fixed: VersionOne username matching should be case insensitive",
                 "qualityBand": "mature"
             },
             {
                 "date": "2010-08-10T00:00:00.000Z",
                 "description": "Summer 2010",
-                "version": "49",
+                "version": "1.0.0.49",
                 "releaseNotes": "Initial Release",
                 "qualityBand": "mature"
             }
