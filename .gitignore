@@ -42,6 +42,7 @@ _ReSharper*/
 [Tt]est[Rr]esult*
 packages/
 *.nupkg
+nunit-result.xml
 
 ## Temp Files##
 *.tmp
