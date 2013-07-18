@@ -10,13 +10,13 @@
         }
     },
     "descriptionSection": {
-        "description": "The LDAP synchronization tool allows an organization to synchronize their VersionOne Member list with users that belong to a specified LDAP group. The tool assumes that the list of users in the LDAP group is the master list, and adds or removes users from VersionOne accordingly. When users are added they are sent an email with VersionOne connection information and, if VersionOne is configured for VersionOne Authentication, a randomly generated password."
+        "description": "The LDAP provisioning tool allows an organization to synchronize their VersionOne Member list with users that belong to a specified LDAP group. The tool assumes that the list of users in the LDAP group is the master list, and adds or removes users from VersionOne accordingly. When users are added they are sent an email with VersionOne connection information and, if VersionOne is configured for VersionOne Authentication, a randomly generated password."
     },
     "linksSection": [
         {
             "type": "download",
             "title": "Download Latest Stable Build",
-            "href": "http://platform.versionone.com.s3.amazonaws.com/downloads/VersionOne.Provisioning.LDAP_1.0.3.72.zip"
+            "href": "http://platform.versionone.com.s3.amazonaws.com/downloads/VersionOne.Provisioning.LDAP_1.0.3.82.zip"
         },
         {
             "type": "documentation",
@@ -27,12 +27,12 @@
     "updatesSection": {
         "updates": [
             {
-                "date": "2013-07-16T21:00:00.000Z",
+                "date": "2013-07-17T21:00:00.000Z",
                 "description": "Summer 2013",
-                "version": "1.0.3.72",
+                "version": "1.0.3.82",
                 "releaseNotes": " * Updated: .NET Framework 4.5\n * Updated: API Client library\n",
                 "qualityBand": "mature",
-                "downloadUrl": "http://platform.versionone.com.s3.amazonaws.com/downloads/VersionOne.Provisioning.LDAP_1.0.3.72.zip"
+                "downloadUrl": "http://platform.versionone.com.s3.amazonaws.com/downloads/VersionOne.Provisioning.LDAP_1.0.3.82.zip"
             },
             {
                 "date": "2011-07-01T00:00:00.000Z",
