@@ -10,7 +10,7 @@
         }
     },
     "descriptionSection": {
-        "description": "The LDAP provisioning tool allows an organization to synchronize their VersionOne Member list with users that belong to a specified LDAP group. The tool assumes that the list of users in the LDAP group is the master list, and adds or removes users from VersionOne accordingly. When users are added they are sent an email with VersionOne connection information and, if VersionOne is configured for VersionOne Authentication, a randomly generated password."
+        "description": "The LDAP provisioning tool synchronizes the VersionOne Member list with users that belong to a specified LDAP group. The tool assumes that the list of users in the LDAP group is the master list, and adds or removes users from VersionOne accordingly. When users are added they are sent an email with VersionOne connection information and, if VersionOne is configured for VersionOne Authentication, a randomly generated password."
     },
     "linksSection": [
         {
