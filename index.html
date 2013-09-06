@@ -14,288 +14,347 @@
 		<h2>Contents</h2>
 		<ul>
 			<li><a href='#ProvisioningLDAP-Description'>Description</a></li>
-			<li><a href='#ProvisioningLDAP-SystemRequirements'>System Requirements</a></li>
+			<li><a href='#ProvisioningLDAP-SystemRequirements'>System
+					Requirements</a></li>
 			<li><a href='#ProvisioningLDAP-Configuration'>Configuration</a></li>
-			<li><a href='#ProvisioningLDAP-Running'>Running the Application</a></li>
+			<li><a href='#ProvisioningLDAP-Running'>Running the
+					Application</a></li>
 		</ul>
 
 		<h2>
 			<a name="ProvisioningLDAP-Description"></a>Description
 		</h2>
-		<p>The LDAP provisioning tool allows an organization to keep their VersionOne active user list synchronized with users that belong to an LDAP group. The tool assumes that the list of users in the LDAP group is the master list, making updates in VersionOne accordingly. It is built as a standalone exe that can be run as a scheduled task. It polls a configured LDAP directory (active directory and Sun One LDAP have been tested) for users belonging to a configured group, and polls a configured VersionOne instance for a list of users. It compares the users it finds in the LDAP group to the users found in VersionOne and takes appropriate action, according to the chart below. If the Version One instance that is being used is utilizing Version One's internal security, every user that is created or reactivated is emailed a randomly generated password (which is not stored anywhere else other than VersionOne), and instructions on logging in and changing their password. If the instance is using integrated windows authentication, the users will be emailed a notification with instructions where to log in, using their windows system account.  Each time the provisioning tool runs, a summary of accounts that were created, reactivated, and deactivated is emailed to the configured administrator address, along with instructions for assigning project access for new users.</p>
+		<p>The LDAP provisioning tool allows an organization to keep their
+			VersionOne active user list synchronized with users that belong to an
+			LDAP group. The tool assumes that the list of users in the LDAP group
+			is the master list, making updates in VersionOne accordingly. It is
+			built as a standalone exe that can be run as a scheduled task. It
+			polls a configured LDAP directory (active directory and Sun One LDAP
+			have been tested) for users belonging to a configured group, and
+			polls a configured VersionOne instance for a list of users. It
+			compares the users it finds in the LDAP group to the users found in
+			VersionOne and takes appropriate action, according to the chart
+			below. If the Version One instance that is being used is utilizing
+			Version One's internal security, every user that is created or
+			reactivated is emailed a randomly generated password (which is not
+			stored anywhere else other than VersionOne), and instructions on
+			logging in and changing their password. If the instance is using
+			integrated windows authentication, the users will be emailed a
+			notification with instructions where to log in, using their windows
+			system account. Each time the provisioning tool runs, a summary of
+			accounts that were created, reactivated, and deactivated is emailed
+			to the configured administrator address, along with instructions for
+			assigning project access for new users.</p>
 
-<table>
-<tbody>
-<tr>
-<th>Username found in LDAP</th>
-<th>Username found in VersionOne</th>
-<th>Action Taken in VersionOne Instance</th>
-</tr>
-<tr>
-<td>Yes</td>
-<td>No</td>
-<td>User created in VersionOne</td>
-</tr>
-<tr>
-<td>Yes</td>
-<td>Yes (active)</td>
-<td>None</td>
-</tr>
-<tr>
-<td>Yes</td>
-<td>Yes (inactive)</td>
-<td>User reactivated in VersionOne</td>
-</tr>
-<tr>
-<td>No</td>
-<td>Yes (active)</td>
-<td>User deactivated in VersionOne</td>
-</tr>
-<tr>
-<td>No</td>
-<td>Yes (inactive)</td>
-<td>None</td>
-</tr>
-</tbody>
-</table>
+		<table>
+			<tbody>
+				<tr>
+					<th>Username found in LDAP</th>
+					<th>Username found in VersionOne</th>
+					<th>Action Taken in VersionOne Instance</th>
+				</tr>
+				<tr>
+					<td>Yes</td>
+					<td>No</td>
+					<td>User created in VersionOne</td>
+				</tr>
+				<tr>
+					<td>Yes</td>
+					<td>Yes (active)</td>
+					<td>None</td>
+				</tr>
+				<tr>
+					<td>Yes</td>
+					<td>Yes (inactive)</td>
+					<td>User reactivated in VersionOne</td>
+				</tr>
+				<tr>
+					<td>No</td>
+					<td>Yes (active)</td>
+					<td>User deactivated in VersionOne</td>
+				</tr>
+				<tr>
+					<td>No</td>
+					<td>Yes (inactive)</td>
+					<td>None</td>
+				</tr>
+			</tbody>
+		</table>
 
-			<h2>
-				<a name="ProvisioningLDAP-SystemRequirements"></a>System Requirements
-			</h2>
-			<ul>
-				<li>VersionOne:
-					<ul>
-						<li>12.2 or above, including Team Edition</li>
-					</ul>
-				</li>
-				<li>Integration Server:
-					<ul>
-						<li>Windows 7/2003 or higher</li>
-						<li>.NET Framework 4.5 or higher</li>
-						<li>Access to an SMTP Server</li>
-					</ul>
-				</li>
-				<li>LDAP Server:
-					<ul>
-						<li>Tested with Active Directory and SunOne LDAP</li>
-					</ul>
-				</li>
-			</ul>
+		<h2>
+			<a name="ProvisioningLDAP-SystemRequirements"></a>System Requirements
+		</h2>
+		<ul>
+			<li>VersionOne:
+				<ul>
+					<li>Tested with VersionOne 13.2.1.32. Expected to work with
+						any version higher than 12.2</li>
+					<li>Compatible with all VersionOne Editions</li>
+					<li>Compatible with all Methodology choices</li>
+				</ul>
+			</li>
+			<li>Integration Server:
+				<ul>
+					<li>Windows 7/2003 or higher</li>
+					<li>.NET Framework 4.5 or higher</li>
+					<li>Access to an SMTP Server</li>
+				</ul>
+			</li>
+			<li>LDAP Server:
+				<ul>
+					<li>Tested with Active Directory and SunOne LDAP</li>
+				</ul>
+			</li>
+		</ul>
 
-			<h2>
-				<a name="ProvisioningLDAP-Configuration"></a>Configuration
-			</h2>
-<p>This tool utilizes LDAP/Active Directory, Version One, and SMTP.  Due to the complexity of integrating these three components, there are several configuration parameters that are required.  These settings will be found in the <code>VersionOne.Provisioning.Console.exe.config</code> file. This file can be edited with any text editor.</p>
+		<h2>
+			<a name="ProvisioningLDAP-Configuration"></a>Configuration
+		</h2>
+		<p>
+			This tool utilizes LDAP/Active Directory, Version One, and SMTP. Due
+			to the complexity of integrating these three components, there are
+			several configuration parameters that are required. These settings
+			will be found in the
+			<code>VersionOne.Provisioning.Console.exe.config</code>
+			file. This file can be edited with any text editor.
+		</p>
 
-<p><b>Version One Settings</b></p>
-<table>
-<tbody>
-<tr>
-<th>Key</th>
-<th>Description</th>
-<th>Sample/possible values</th>
-</tr>
-<tr>
-<td>V1Instance</td>
-<td>Location of VersionOne instance</td>
-<td>http://localhost/versiononeauth</td>
-</tr>
-<tr>
-<td>V1InstanceUsername</td>
-<td>User name of a V1 Admin.  If using windows integrated authentication, leave this value blank</td>
-<td>corp\bob; admin</td>
-</tr>
-<tr>
-<td>V1InstancePassword</td>
-<td>V1 Admin password.  </td>
-<td>*****</td>
-</tr>
-<tr>
-<td>V1UserDefaultRole</td>
-<td>Default role for added team members</td>
-<td>4 is the User role</td>
-</tr>
-<tr>
-<td>IntegratedAuth</td>
-<td>Does version one use windows integrated authentication?</td>
-<td>True/false</td>
-</tr>
-<tr>
-<td>proxyServerUri</td>
-<td>Location of proxy server, if one is being used</td>
-<td>http://proxy.server.com/</td>
-</tr>
-<tr>
-<td>proxyUsername</td>
-<td>User name for accessing proxy server</td>
-<td>Corp\bob</td>
-</tr>
-<tr>
-<td>proxyPassword</td>
-<td>Password for accessing proxy server</td>
-<td>*****</td>
-</tr>
-<tr>
-<td>proxyDomain</td>
-<td>Domain for proxy server</td>
-<td>corp</td>
-</tr>
-</tbody>
-</table>
-
-
-<p><b>LDAP Settings</b></p>
-<table>
-<tbody>
-<tr>
-<th>Key</th>
-<th>Description</th>
-<th>Sample/possible values</th>
-</tr>
-<tr>
-<td>ldapGroupMemberAttribute</td>
-<td>Attribute that points to the LDAP group member</td>
-<td>member</td>
-</tr>
-<tr>
-<td>ldapServerPath</td>
-<td>Network location of ldap server</td>
-<td>192.168.36.4</td>
-</tr>
-<tr>
-<td>ldapGroupDN</td>
-<td>Top level LDAP domain names</td>
-<td>CN=TestV1Users,CN=Users,DC=corp,DC=versionone,DC=net</td>
-</tr>
-<tr>
-<td>ldapUsername</td>
-<td>Username to access LDAP, if not using default credentials</td>
-<td>Can be empty if using default credentials</td>
-</tr>
-<tr>
-<td>ldapPassword</td>
-<td>Password to be provided to LDAP, , if not using default credentials</td>
-<td>Can be empty if using default credentials</td>
-</tr>
-<tr>
-<td>mapToV1Username</td>
-<td>LDAP user atttribute that holds username to be mapped to the V1 username</td>
-<td>sAMAccountName</td>
-</tr>
-<tr>
-<td>mapToV1Fullname</td>
-<td>LDAP user atttribute that holds users full name to be mapped to the V1 Full Name</td>
-<td>displayName</td>
-</tr>
-<tr>
-<td>mapToV1Email</td>
-<td>LDAP user atttribute that holds email address to be mapped to the V1 email address</td>
-<td>userPrincipalName</td>
-</tr>
-<tr>
-<td>mapToV1Nickname</td>
-<td>LDAP user atttribute that holds a nickname to be mapped to the V1 nickname attribute</td>
-<td>sAMAccountName</td>
-</tr>
-<tr>
-<td>useDefaultLDAPCredentials</td>
-<td>Whether to use the system level credentials of the logged in user when accessing LDAP</td>
-<td>True</td>
-</tr>
-</tbody>
-</table>
+		<h3>Version One Settings</h3>
+		<table>
+			<tbody>
+				<tr>
+					<th>Key</th>
+					<th>Description</th>
+					<th>Sample/possible values</th>
+				</tr>
+				<tr>
+					<td>V1Instance</td>
+					<td>Location of VersionOne instance</td>
+					<td>http://localhost/versiononeauth</td>
+				</tr>
+				<tr>
+					<td>V1InstanceUsername</td>
+					<td>User name of a V1 Admin. If using windows integrated
+						authentication, leave this value blank</td>
+					<td>corp\bob; admin</td>
+				</tr>
+				<tr>
+					<td>V1InstancePassword</td>
+					<td>V1 Admin password.</td>
+					<td>*****</td>
+				</tr>
+				<tr>
+					<td>V1UserDefaultRole</td>
+					<td>Default role for added team members</td>
+					<td>4 is the User role</td>
+				</tr>
+				<tr>
+					<td>IntegratedAuth</td>
+					<td>Does version one use windows integrated authentication?</td>
+					<td>True/false</td>
+				</tr>
+				<tr>
+					<td>proxyServerUri</td>
+					<td>Location of proxy server, if one is being used</td>
+					<td>http://proxy.server.com/</td>
+				</tr>
+				<tr>
+					<td>proxyUsername</td>
+					<td>User name for accessing proxy server</td>
+					<td>Corp\bob</td>
+				</tr>
+				<tr>
+					<td>proxyPassword</td>
+					<td>Password for accessing proxy server</td>
+					<td>*****</td>
+				</tr>
+				<tr>
+					<td>proxyDomain</td>
+					<td>Domain for proxy server</td>
+					<td>corp</td>
+				</tr>
+			</tbody>
+		</table>
 
 
-<p><b>Email Properties</b></p>
-<table>
-<tbody>
-<tr>
-<th>Key</th>
-<th>Description</th>
-<th>Sample/possible values</th>
-</tr>
-<tr>
-<td>smtpEnableSSL</td>
-<td>Whether smtp requires ssl</td>
-<td>false</td>
-</tr>
-<tr>
-<td>userNotificationEmailSubject</td>
-<td>Subject line for all user notification emails</td>
-<td>You Have Been Added as VersionOne User</td>
-</tr>
-<tr>
-<td>userNotificationEmailBodyFilename</td>
-<td>File name of html file that contains the body of the user notification emails.  </td>
-<td>userNotificationEmail.html; <br class="atl-forced-newline" />
-userNotificationEmailIntegratedAuth.html</td>
-</tr>
-<tr>
-<td>adminFullName</td>
-<td>Full name of admin for a user to contact if necessary</td>
-<td>VersionOne Administrator</td>
-</tr>
-<tr>
-<td>adminEmail</td>
-<td>Email address of said admin</td>
-<td>admin@versionone.com</td>
-</tr>
-<tr>
-<td>adminNotificationEmailSubject</td>
-<td>Subject line for notifications sent to administrators</td>
-<td>Notification of VersionOne User Changes</td>
-</tr>
-<tr>
-<td>adminNotificationEmailBodyTemplateFilename</td>
-<td>File name of html file that contains the body of the admin notification emails</td>
-<td>adminNotificationEmailTemplate.html</td>
-</tr>
-<tr>
-<td>adminNotificationEmailBodyNewUsersFilename</td>
-<td>File name of html file that contains specific text for admin notification of new users added</td>
-<td>adminNotificationEmailNewUsers.html</td>
-</tr>
-<tr>
-<td>adminNotificationEmailBodyDeactivatedUsersFilename</td>
-<td>File name of html file that contains specific text for admin notification of users deactivated</td>
-<td>adminNotificationEmailDeactivatedUsers.html</td>
-</tr>
-<tr>
-<td>adminNotificationEmailBodyReactivatedUsersFilename</td>
-<td>File name of html file that contains specific text for admin notification of users reactivated.</td>
-<td>adminNotificationEmailReactivatedUsers.htm</td>
-</tr>
-</tbody>
-</table>
+		<h3>LDAP Settings</h3>
+		<table>
+			<tbody>
+				<tr>
+					<th>Key</th>
+					<th>Description</th>
+					<th>Sample/possible values</th>
+				</tr>
+				<tr>
+					<td>ldapGroupMemberAttribute</td>
+					<td>Attribute that points to the LDAP group member</td>
+					<td>member</td>
+				</tr>
+				<tr>
+					<td>ldapServerPath</td>
+					<td>Network location of ldap server</td>
+					<td>192.168.36.4</td>
+				</tr>
+				<tr>
+					<td>ldapGroupDN</td>
+					<td>Top level LDAP domain names</td>
+					<td>CN=TestV1Users,CN=Users,DC=corp,DC=versionone,DC=net</td>
+				</tr>
+				<tr>
+					<td>ldapUsername</td>
+					<td>Username to access LDAP, if not using default credentials</td>
+					<td>Can be empty if using default credentials</td>
+				</tr>
+				<tr>
+					<td>ldapPassword</td>
+					<td>Password to be provided to LDAP, , if not using default
+						credentials</td>
+					<td>Can be empty if using default credentials</td>
+				</tr>
+				<tr>
+					<td>mapToV1Username</td>
+					<td>LDAP user atttribute that holds username to be mapped to
+						the V1 username</td>
+					<td>sAMAccountName</td>
+				</tr>
+				<tr>
+					<td>mapToV1Fullname</td>
+					<td>LDAP user atttribute that holds users full name to be
+						mapped to the V1 Full Name</td>
+					<td>displayName</td>
+				</tr>
+				<tr>
+					<td>mapToV1Email</td>
+					<td>LDAP user atttribute that holds email address to be mapped
+						to the V1 email address</td>
+					<td>userPrincipalName</td>
+				</tr>
+				<tr>
+					<td>mapToV1Nickname</td>
+					<td>LDAP user atttribute that holds a nickname to be mapped to
+						the V1 nickname attribute</td>
+					<td>sAMAccountName</td>
+				</tr>
+				<tr>
+					<td>useDefaultLDAPCredentials</td>
+					<td>Whether to use the system level credentials of the logged
+						in user when accessing LDAP</td>
+					<td>True</td>
+				</tr>
+			</tbody>
+		</table>
 
-<p>In addition, there are SMTP specific keys to be set in the system.net section:</p>
-<div class="hlcode">
-<div class="syntax">
-<pre>  <span class="nt">&lt;system.net&gt;</span>
+
+		<h3>Email Properties</h3>
+		<table>
+			<tbody>
+				<tr>
+					<th>Key</th>
+					<th>Description</th>
+					<th>Sample/possible values</th>
+				</tr>
+				<tr>
+					<td>smtpEnableSSL</td>
+					<td>Whether smtp requires ssl</td>
+					<td>false</td>
+				</tr>
+				<tr>
+					<td>userNotificationEmailSubject</td>
+					<td>Subject line for all user notification emails</td>
+					<td>You Have Been Added as VersionOne User</td>
+				</tr>
+				<tr>
+					<td>userNotificationEmailBodyFilename</td>
+					<td>File name of html file that contains the body of the user
+						notification emails.</td>
+					<td>userNotificationEmail.html; <br class="atl-forced-newline" />
+						userNotificationEmailIntegratedAuth.html
+					</td>
+				</tr>
+				<tr>
+					<td>adminFullName</td>
+					<td>Full name of admin for a user to contact if necessary</td>
+					<td>VersionOne Administrator</td>
+				</tr>
+				<tr>
+					<td>adminEmail</td>
+					<td>Email address of said admin</td>
+					<td>admin@versionone.com</td>
+				</tr>
+				<tr>
+					<td>adminNotificationEmailSubject</td>
+					<td>Subject line for notifications sent to administrators</td>
+					<td>Notification of VersionOne User Changes</td>
+				</tr>
+				<tr>
+					<td>adminNotificationEmailBodyTemplateFilename</td>
+					<td>File name of html file that contains the body of the admin
+						notification emails</td>
+					<td>adminNotificationEmailTemplate.html</td>
+				</tr>
+				<tr>
+					<td>adminNotificationEmailBodyNewUsersFilename</td>
+					<td>File name of html file that contains specific text for
+						admin notification of new users added</td>
+					<td>adminNotificationEmailNewUsers.html</td>
+				</tr>
+				<tr>
+					<td>adminNotificationEmailBodyDeactivatedUsersFilename</td>
+					<td>File name of html file that contains specific text for
+						admin notification of users deactivated</td>
+					<td>adminNotificationEmailDeactivatedUsers.html</td>
+				</tr>
+				<tr>
+					<td>adminNotificationEmailBodyReactivatedUsersFilename</td>
+					<td>File name of html file that contains specific text for
+						admin notification of users reactivated.</td>
+					<td>adminNotificationEmailReactivatedUsers.htm</td>
+				</tr>
+			</tbody>
+		</table>
+
+		<p>In addition, there are SMTP specific keys to be set in the
+			system.net section:</p>
+		<div class="hlcode">
+			<div class="syntax">
+				<pre>  <span class="nt">&lt;system.net&gt;</span>
     <span class="nt">&lt;mailSettings&gt;</span>
-      <span class="nt">&lt;smtp</span> <span class="na">deliveryMethod=</span><span class="s">&quot;Network&quot;</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;smtp</span> <span class="na">deliveryMethod=</span><span
+						class="s">&quot;Network&quot;</span><span class="nt">&gt;</span>
         <span class="c">&lt;!-- use this network declaration to include a specific username and password </span>
 <span class="c">        &lt;network host=&quot;mail.mydomain.com&quot; password=&quot;xxxxxx&quot; port=&quot;25&quot; userName=&quot;someaddress@mydomain.com&quot; defaultCredentials=&quot;false&quot;/&gt;</span>
 <span class="c">        --&gt;</span>
         <span class="c">&lt;!-- use this network declaration to use the credentials of the process running the provisioning tool --&gt;</span>
-        <span class="nt">&lt;network</span> <span class="na">host=</span><span class="s">&quot;beryllium&quot;</span> <span class="na">port=</span><span class="s">&quot;25&quot;</span> <span class="na">defaultCredentials=</span><span class="s">&quot;true&quot;</span><span class="nt">/&gt;</span>
+        <span class="nt">&lt;network</span> <span class="na">host=</span><span
+						class="s">&quot;beryllium&quot;</span> <span class="na">port=</span><span
+						class="s">&quot;25&quot;</span> <span class="na">defaultCredentials=</span><span
+						class="s">&quot;true&quot;</span><span class="nt">/&gt;</span>
 
       <span class="nt">&lt;/smtp&gt;</span>
     <span class="nt">&lt;/mailSettings&gt;</span>
   <span class="nt">&lt;/system.net&gt;</span>
-</pre></div>
+</pre>
+			</div>
 
-		<h2>
-			<a name="ProvisioningLDAP-Running"></a>Running the Application
-		</h2>
+			<h2>
+				<a name="ProvisioningLDAP-Running"></a>Running the Application
+			</h2>
 
-<p>Once the settings have been confirmed, simply navigate to the directory where the application resides and type:</br>
-<code>VersionOne.Provisioning.Console.exe</code></p>
+			<p>
+				Once the settings have been confirmed, simply navigate to the
+				directory where the application resides and type:</br>
+				<code>VersionOne.Provisioning.Console.exe</code>
+			</p>
 
-<p>The tool will perform a check of most of the parameters for validity, and report any errors, if there are any. Errors will be displayed on the console and also stored in the file &quot;log.txt&quot;. After running, the tool will provide a brief summary describing the actions taken, then exit.</p>
+			<p>The tool will perform a check of most of the parameters for
+				validity, and report any errors, if there are any. Errors will be
+				displayed on the console and also stored in the file
+				&quot;log.txt&quot;. After running, the tool will provide a brief
+				summary describing the actions taken, then exit.</p>
 
-<p><b>Sample Startup Output</b></p>
-<samp><pre class="cmd">
+			<h3>Sample Startup Output</h3>
+			<samp>
+				<pre class="cmd">
 13:52:11|Info||Checking VersionOne Settings
 13:52:11|Info||Attaching to version one at: http://localhost/versiononeauth/
 13:52:11|Info||13 users successfully retrieved from VersionOne.
@@ -308,8 +367,9 @@ userNotificationEmailIntegratedAuth.html</td>
 13:52:13|Info||1 VersionOne users have been marked for deactivation.
 13:52:13|Info||0 VersionOne users have been marked for reactivation.
 13:52:13|Info||Member with username 'corp\Maggie2' has been CREATED in the VersionOne system.
-</pre></samp>
-			
-	</div>
+</pre>
+			</samp>
+
+		</div>
 </body>
 </html>
