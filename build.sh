@@ -65,19 +65,13 @@ if [ -z "$WORKSPACE" ]; then
   export WORKSPACE=`parentwith .git`;
 fi
 
-TOOLSDIRS=". $WORKSPACE/GetBuildTools $WORKSPACE/v1_build_tools $WORKSPACE/../v1_build_tools $WORKSPACE/nuget_tools"
+TOOLSDIRS=". $WORKSPACE/GetBuildTools $WORKSPACE/v1_build_tools $WORKSPACE/../v1_build_tools"
 #TOOLSDIRS="."
 for D in $TOOLSDIRS; do
   if [ -d "$D/bin" ]; then
     export BUILDTOOLS_PATH="$D/bin"
   fi
 done
-echo $(which $BUILDTOOLS_PATH/NuGet.exe)
-echo $(which $WORKSPACE/.nuget/NuGet.exe)
-if [ ! $(which $BUILDTOOLS_PATH/NuGet.exe) ] && [ $(which $WORKSPACE/.nuget/NuGet.exe) ]; then
-  export BUILDTOOLS_PATH="$WORKSPACE/.nuget"
-fi
-echo "Using $BUILDTOOLS_PATH for NuGet"
 
 if [ -z "$DOTNET_PATH" ]; then
   for D in `bashpath "$SYSTEMROOT\\Microsoft.NET\\Framework\\v*"`; do
@@ -111,21 +105,6 @@ if [ -z "$BUILD_NUMBER" ]; then
   # presume local workstation, use date-based build number
   export BUILD_NUMBER=`date +%H%M`  # hour + minute
 fi
-
-function update_nuget_deps() {
-  install_nuget_deps
-  NuGet.exe update $SOLUTION_FILE -Verbose -Source $NUGET_FETCH_URL
-}
-
-function install_nuget_deps() {
-  PKGSDIRW=`winpath "$WORKSPACE/packages"`
-  for D in $WORKSPACE/*; do
-    if [ -d $D ] && [ -f $D/packages.config ]; then
-      PKGSCONFIGW=`winpath "$D/packages.config"`
-      NuGet.exe install "$PKGSCONFIGW" -o "$PKGSDIRW" -Source "$NUGET_FETCH_URL"
-    fi
-  done
-}
 
 
 
@@ -168,12 +147,6 @@ MSBuild.exe $SOLUTION_FILE -m \
 
 
 
-# ---- Update NuGet Packages --------------------------------------------------
-
-# update_nuget_deps
-install_nuget_deps
-
-
 # ---- Build solution using msbuild -------------------------------------------
 
 WIN_SIGNING_KEY="`winpath "$SIGNING_KEY"`"
@@ -184,11 +157,5 @@ MSBuild.exe $SOLUTION_FILE \
   -p:Configuration="$Configuration" \
   -p:Platform="$Platform" \
   -p:Verbosity=Diagnostic
-
-
-
-# ---- Produce .zip file ----------------------------------------------------------
-
-#git archive -o ${MAIN_DIR}_${VERSION_NUMBER}.${BUILD_NUMBER}.zip HEAD
 
 
