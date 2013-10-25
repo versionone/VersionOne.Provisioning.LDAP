@@ -16,7 +16,10 @@ Since we work on many projects that may have different tool chains, we automate 
 
 * First, see [Chocolatey's requirements](https://github.com/chocolatey/chocolatey/wiki)
 * Next, assuming you already Cloned or Downloaded this repository from GitHub into `C:\Projects\VersionOne.Provisioning.LDAP`, open an `Admininstrator` command prompt in that folder and run the following:
-    @powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))" && SET PATH=%PATH%;%systemdrive%\chocolatey\bin
+
+```Batchfile
+@powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))" && SET PATH=%PATH%;%systemdrive%\chocolatey\bin
+```
 
 If the Chocolatey install worked, then:
 
@@ -33,7 +36,7 @@ This should start downloading and automatically installing the tools listed in [
 * **Install Bash shell** -- our `build.sh` and other scripts are written in Bash, so you need a good Bash shell to execute them. People on the VersionOne team use both [http://git-scm.com/download/win](Git Bash) and 
 [Cygwin with the Bash package](http://www.cygwin.com/) successfully.
 
-# How to Build
+## How to Build
 
 Assuming you have followed the previous steps and your environment is all setup correctly now:
 
