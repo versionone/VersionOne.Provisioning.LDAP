@@ -19,6 +19,11 @@
             "href": "http://platform.versionone.com.s3.amazonaws.com/downloads/VersionOne.Provisioning.LDAP_1.0.3.87.zip"
         },
         {
+            "type": "download",
+            "title": "Download Latest Early Access Build",
+            "href": "http://platform.versionone.com.s3.amazonaws.com/downloads/VersionOne.Provisioning.LDAP_1.1.0.96.zip"
+        },
+        {
             "type": "documentation",
             "title": "Documentation",
             "href": "http://versionone.github.io/VersionOne.Provisioning.LDAP/"
