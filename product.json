@@ -43,6 +43,14 @@
     "updatesSection": {
         "updates": [
             {
+                "date": "2013-10-29T10:00:00.000Z",
+                "description": "Fall 2013 Early Access",
+                "version": "1.1.0.96",
+                "releaseNotes": "Added: Allow LDAP group to include other groups",
+                "qualityBand": "seed",
+                "downloadUrl": "http://platform.versionone.com.s3.amazonaws.com/downloads/VersionOne.Provisioning.LDAP_1.1.0.96.zip"
+            },
+            {
                 "date": "2013-07-17T21:00:00.000Z",
                 "description": "Summer 2013",
                 "version": "1.0.3.87",
@@ -75,7 +83,7 @@
         ],
         "qualityBands": {
             "seed": {
-                "shortDescription": "The initial idea of a product. May not be stable code.",
+                "shortDescription": "Early access build. Use with caution.",
                 "href": "https://github.com/versionone/VersionOne.Provisioning.LDAP/blob/master/CONTRIBUTING.md#seed"
             },
             "sapling": {
