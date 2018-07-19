@@ -67,25 +67,33 @@ namespace VersionOne.Provisioning.LDAP {
             if (memberPaths.Count < 1) {
                 logger.Warn("No members were returned from group: " + fullPath + ", group member attribute name: '" + groupMemberAttribute);
             }
-            
+
             return ldapUsersList;
         }
 
         private DirectoryEntry GetDirectoryEntry(string fullPath, string[] propertiesToLoad) {
             try {
-                DirectoryEntry entry;
-                if (useDefaultCredentials) {
-                    entry = new DirectoryEntry(fullPath);
-                } else {
-                    entry = new DirectoryEntry(fullPath, username, password);
-                }
-                entry.AuthenticationType = AuthenticationTypes.ServerBind;
+                DirectoryEntry entry = MakeDirectoryEntry(fullPath);
                 entry.RefreshCache(propertiesToLoad);
                 return entry;
             } catch (Exception ex) {
                 logger.ErrorException("Unable access ldap, path: " + fullPath + "', username: '" + username + "', use default credentials: '" + useDefaultCredentials + "'", ex);
                 throw;
             }
+        }
+
+        private DirectoryEntry MakeDirectoryEntry(string fullPath) {
+            DirectoryEntry entry;
+            if (useDefaultCredentials)
+            {
+                entry = new DirectoryEntry(fullPath);
+            }
+            else
+            {
+                entry = new DirectoryEntry(fullPath, username, password);
+            }
+            entry.AuthenticationType = AuthenticationTypes.ServerBind;
+            return entry;
         }
 
         private void SetNickname(DirectoryUser user, DirectoryEntry member) {
