@@ -52,11 +52,12 @@ namespace VersionOne.Provisioning.LDAP {
             foreach (string memberPath in memberPaths) {
                 try {
                     DirectoryUser user = new DirectoryUser();
-                    DirectoryEntry member = GetMember(memberPath);
-                    SetUsername(user, member);
-                    SetFullName(user, member);
-                    SetEmail(user, member);
-                    SetNickname(user, member);
+                    using (DirectoryEntry member = GetMember(memberPath)) {
+                        SetUsername(user, member);
+                        SetFullName(user, member);
+                        SetEmail(user, member);
+                        SetNickname(user, member);
+                    }
                     ldapUsersList.Add(user);
                 } catch (Exception ex) {
                     logger.ErrorException("Unable to read member from ldap, path: " + memberPath, ex);
