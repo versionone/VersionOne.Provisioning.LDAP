@@ -171,8 +171,9 @@ namespace VersionOne.Provisioning.LDAP {
 
         private IList<string> GetDNofGroupMembers(string userGroupDN, string objClass)
         {
-            DirectorySearcher ds = new DirectorySearcher(root);
-            ds.Filter = String.Format("(&(memberOf={0})(objectClass={1}))", new[] { userGroupDN, objClass });
+            DirectoryEntry searchRoot = MakeDirectoryEntry(root + userGroupDN);
+            DirectorySearcher ds = new DirectorySearcher(searchRoot);
+            ds.Filter = String.Format("(objectClass={0})", objClass );
             ds.PropertiesToLoad.Add("distinguishedname");
 
             IList<string> groupMemberDNs = new List<string>();
@@ -190,6 +191,7 @@ namespace VersionOne.Provisioning.LDAP {
                 logger.ErrorException("Unable to read members from ldap, path: " + root + userGroupDN + ", objectClass: " + objClass, ex);
                 throw;
             }
+            finally { searchRoot.Dispose(); }
 
             return groupMemberDNs;
         }
