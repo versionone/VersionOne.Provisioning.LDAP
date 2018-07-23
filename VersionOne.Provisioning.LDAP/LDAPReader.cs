@@ -157,6 +157,8 @@ namespace VersionOne.Provisioning.LDAP {
                 // should user group also have groups within it, recursively get user members of the group
                 foreach (string groupMemberPath in groupMemberPaths)
                 {
+                    if (groupMemberPath.Equals(userGroupPath, StringComparison.OrdinalIgnoreCase)) continue;
+
                     // recursion here
                     foreach (string userMemberPath in GetMemberPaths(groupMemberPath))
                     {
