@@ -47,7 +47,7 @@ namespace VersionOne.Provisioning.LDAP {
 
         public IList<DirectoryUser> GetUsers() {
             IList<DirectoryUser> ldapUsersList = new List<DirectoryUser>();
-            IList<string> memberPaths = GetMemberPaths(groupDN);
+            IList<string> memberPaths = GetMemberPaths(fullPath);
 
             foreach (string memberPath in memberPaths) {
                 try {
@@ -137,31 +137,31 @@ namespace VersionOne.Provisioning.LDAP {
 
         private DirectoryEntry GetMember(string memberPath) {
             try {
-                return GetDirectoryEntry(root + memberPath, new[] { mapUsername, mapFullname, mapEmail, mapNickname });
+                return GetDirectoryEntry(memberPath, new[] { mapUsername, mapFullname, mapEmail, mapNickname });
             } catch (Exception ex) {
-                logger.ErrorException("Unable to get directory entry for member, path: " + root + memberPath + ", username: " + username, ex);
+                logger.ErrorException("Unable to get directory entry for member, path: " + memberPath + ", username: " + username, ex);
                 throw;
             }
         }
 
-        private IList<string> GetMemberPaths(string userGroupDN)
+        private IList<string> GetMemberPaths(string userGroupPath)
         {
             // retrieve distinguished names of user members of the group
-            IList<string> userMemberPaths = GetDNofGroupMembers(userGroupDN, "person");
+            IList<string> userMemberPaths = GetPathsOfGroupMembers(userGroupPath, "person");
 
             if (useNestedGrouping)
             {
                 // retrieve distinguished names of group members of the group
-                IList<string> groupMemberDNs = GetDNofGroupMembers(userGroupDN, "group");
+                IList<string> groupMemberPaths = GetPathsOfGroupMembers(userGroupPath, "group");
 
                 // should user group also have groups within it, recursively get user members of the group
-                foreach (string groupMemberDN in groupMemberDNs)
+                foreach (string groupMemberPath in groupMemberPaths)
                 {
                     // recursion here
-                    foreach (string userMemberDN in GetMemberPaths(groupMemberDN))
+                    foreach (string userMemberPath in GetMemberPaths(groupMemberPath))
                     {
                         // add users of nested group
-                        userMemberPaths.Add(userMemberDN);
+                        userMemberPaths.Add(userMemberPath);
                     }
                 }
             }
@@ -169,31 +169,30 @@ namespace VersionOne.Provisioning.LDAP {
             return userMemberPaths;
         }
 
-        private IList<string> GetDNofGroupMembers(string userGroupDN, string objClass)
+        private IList<string> GetPathsOfGroupMembers(string userGroupPath, string objClass)
         {
-            DirectoryEntry searchRoot = MakeDirectoryEntry(root + userGroupDN);
+            DirectoryEntry searchRoot = MakeDirectoryEntry(userGroupPath);
             DirectorySearcher ds = new DirectorySearcher(searchRoot);
             ds.Filter = String.Format("(objectClass={0})", objClass );
-            ds.PropertiesToLoad.Add("distinguishedname");
 
-            IList<string> groupMemberDNs = new List<string>();
+            IList<string> groupMemberPaths = new List<string>();
             try
             {
                 SearchResultCollection dsAll = ds.FindAll();
                 foreach (SearchResult sr in dsAll)
                 {
-                    string memberDN = sr.Properties["distinguishedname"][0].ToString();
-                    groupMemberDNs.Add(memberDN);
+                    string memberPath = sr.Path;
+                    groupMemberPaths.Add(memberPath);
                 }
             }
             catch (Exception ex)
             {
-                logger.ErrorException("Unable to read members from ldap, path: " + root + userGroupDN + ", objectClass: " + objClass, ex);
+                logger.ErrorException("Unable to read members from ldap, path: " + userGroupPath + ", objectClass: " + objClass, ex);
                 throw;
             }
             finally { searchRoot.Dispose(); }
 
-            return groupMemberDNs;
+            return groupMemberPaths;
         }
 
     }
