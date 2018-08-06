@@ -81,9 +81,9 @@ namespace VersionOne.Provisioning {
                                         IDictionary<string, User> versionOneUsers) {
             List<User> v1ActionList = new List<User>();
 
-            int countUsersToCreate = 0;
-            int countUsersToReactivate = 0;
-            int countUsersToDeactivate = 0;
+            List<User> v1UsersToCreate = new List<User>();
+            List<User> v1UsersToReactivate = new List<User>();
+            List<User> v1UsersToDeactivate = new List<User>();
 
             //Look for a match using directory as the master list...
             foreach (User directoryUser in directoryUsers.Values) {
@@ -96,14 +96,12 @@ namespace VersionOne.Provisioning {
                         //so it needs to be reactivated in V1.
                         userInV1.Reactivate = true;
                         userInV1.Email = directoryUser.Email;
-                        v1ActionList.Add(userInV1);
-                        countUsersToReactivate++;
+                        v1UsersToReactivate.Add(userInV1);
                     }
                 } else {
                     //This directory user is not in V1, so it needs to be created in V1.
                     directoryUser.Create = true;
-                    v1ActionList.Add(directoryUser);
-                    countUsersToCreate++;
+                    v1UsersToCreate.Add(directoryUser);
                 }
             }
 
@@ -116,15 +114,20 @@ namespace VersionOne.Provisioning {
                         //This V1 user is not in Ldap, but is active in V1, 
                         //so it needs to be deactivated in V1.
                         userInV1.Deactivate = true;
-                        v1ActionList.Add(userInV1);
-                        countUsersToDeactivate++;
+                        v1UsersToDeactivate.Add(userInV1);
                     }
                 }
             }
 
-            logger.Info(countUsersToCreate + " Directory users have been marked for creation in VersionOne.");
-            logger.Info(countUsersToDeactivate + " VersionOne users have been marked for deactivation.");
-            logger.Info(countUsersToReactivate + " VersionOne users have been marked for reactivation.");
+            // Put V1 users to deactivate in the list first
+            v1ActionList.AddRange(v1UsersToDeactivate);
+            // Add the rest of the users
+            v1ActionList.AddRange(v1UsersToReactivate);
+            v1ActionList.AddRange(v1UsersToCreate);
+
+            logger.Info(v1UsersToCreate.Count + " Directory users have been marked for creation in VersionOne.");
+            logger.Info(v1UsersToDeactivate.Count + " VersionOne users have been marked for deactivation.");
+            logger.Info(v1UsersToReactivate.Count + " VersionOne users have been marked for reactivation.");
 
             return v1ActionList;
         }

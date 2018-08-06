@@ -87,6 +87,21 @@ namespace VersionOne.Provisioning.Tests {
             }
         }
 
+        [Test]
+        public void TestCompareUsersOrder() {
+            IDictionary<string, User> usersFromLdap = testUserFactory.CreateTestLdapUsers(false);
+            Assert.AreEqual(5, usersFromLdap.Count); //make sure the usersFromLdap List was populated correctly
+        
+            IDictionary<string, User> usersFromV1 = testUserFactory.CreateTestV1Users(false);
+            Assert.AreEqual(4, usersFromV1.Count); //make sure the V1 users List was populated correctly
+        
+            IList<User> usersToAction = manager.CompareUsers(usersFromLdap, usersFromV1);
+        
+            Assert.AreEqual(5, usersToAction.Count);
+        
+            CheckUser(usersToAction[0], "tom"); // make sure that Deactivation of users is first in the list
+        }
+
         private static void CheckUser(User user, string userName) {
             switch (userName) {
                 case "abe":
